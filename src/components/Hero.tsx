@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import HeroLogo from './HeroLogo';
+import Image from "next/image";
 
 type NetworkInformation = {
   downlink: number;
@@ -11,7 +11,7 @@ type NetworkInformation = {
   saveData: boolean;
 };
         
-const backgroundUrl = '/images/hero-frame.png';
+const backgroundUrl = '/images/hero-frame.avif';
 
 const Hero = () => {
   const [shouldLoadVideo, setShouldLoadVideo] = useState<boolean>(false);
@@ -45,12 +45,18 @@ const Hero = () => {
   return (
     <div className="hero relative w-full h-screen overflow-hidden" id="hero">
       {/* Static Background Image */}
-      <div
-        className={`absolute top-0 left-0 w-full h-full bg-cover bg-center bg-fixed z-0 transition-opacity duration-1000 ${
-          isVideoLoaded ? 'opacity-0' : 'opacity-100'
-        }`}
-        style={{ backgroundImage: `url(${backgroundUrl})` }}
-      />
+      <div className="absolute top-0 left-0 w-full h-full z-0 transition-opacity duration-1000">
+        <Image
+          src={backgroundUrl}
+          alt="Background"
+          fill
+          quality={75} // adjust for file size
+          priority // optional: keeps LCP fast if this is above the fold
+          className={`object-cover object-center transition-opacity duration-1000 ${
+            isVideoLoaded ? 'opacity-0' : 'opacity-100'
+          }`}
+        />
+      </div>
 
       {/* Background Video */}
       {shouldLoadVideo && (
@@ -59,7 +65,7 @@ const Hero = () => {
             isVideoLoaded ? 'opacity-100' : 'opacity-0'
           }`}
           src="/videos/Hero-Video.mp4"
-          poster="/images/hero-frame.png"
+          poster="/images/hero-frame.avif"
           autoPlay
           loop
           muted
@@ -68,17 +74,22 @@ const Hero = () => {
         />
       )}
 
-      {/* Overlay */}
-      <div className="absolute top-0 left-0 w-full h-full bg-black/40 z-0" />
-
       {/* Content Section */}
       <section className="relative z-10 min-h-screen flex flex-col items-center justify-start sm:justify-center pt-20 sm:pt-0">
         
-        <HeroLogo />
+        <Image
+          src="/images/hero-logo.avif" // Use the higher-res AVIF you exported
+          alt="Faded Headquarters"
+          width={748} 
+          height={222}
+          priority
+          sizes="(max-width: 768px) 360px, 748px" 
+          className="w-[90%] max-w-[800px] h-auto mx-auto mb-20 lg:-mt-40"
+        />
 
         <Link
           href="/#booking"
-          className="relative z-10 font-gotisch text-white bg-red-900/50 backdrop-blur-sm hover:drop-shadow-glow hover:bg-red-900 inline-flex items-center justify-center px-6 py-2 -mt-12 md:-mt-28 md:text-2xl text-lg shadow-xl rounded-2xl sm:w-auto sm:mb-0 group transition duration-300 ease-in-out"
+          className="relative z-10 font-gotisch text-white bg-red-900/50 backdrop-blur-sm hover:bg-red-900 inline-flex items-center justify-center px-6 py-2 -mt-12 md:-mt-28 md:text-2xl text-lg shadow-xl rounded-2xl sm:w-auto sm:mb-0 group transition duration-300 ease-in-out"
         >
           book haircut
           <svg

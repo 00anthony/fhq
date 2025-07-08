@@ -1,9 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Grenze+Gotisch&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Anton&family=Open+Sans:wght@300;400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Grenze+Gotisch&family=Open+Sans:wght@300;400;600;700&display=swap');
 @import "tailwindcss";
 @import "tailwindcss/utilities";
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     font-family: 'Open Sans', sans-serif;
     color: white;
@@ -13,9 +16,6 @@
 
   h1, h2, h3, h4 {
     font-family: 'Anton', sans-serif;
-  }
-   html {
-    scroll-behavior: smooth;
   }
 }
 
@@ -30,8 +30,8 @@
   .font-body {
     font-family: 'Open Sans', sans-serif;
   }
-  .drop-shadow-glow {
-    drop-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
+  .scroll-container {
+    -webkit-overflow-scrolling: touch; /* iOS native momentum scroll */
   }
 }
 @plugin "tailwind-scrollbar-hide";
