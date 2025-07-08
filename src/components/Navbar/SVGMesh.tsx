@@ -11,52 +11,60 @@ export default function SVGMesh({ url }: SVGMeshProps) {
   const groupRef = useRef<THREE.Group>(null);
 
   useEffect(() => {
+    let isMounted = true;
+    const loader = new SVGLoader();
+
     const loadSVG = async () => {
       try {
         const res = await fetch(url);
         const svgText = await res.text();
 
-        const loader = new SVGLoader();
         const data = loader.parse(svgText);
         const paths = data.paths;
-        const group = new THREE.Group();
+        const svgGroup = new THREE.Group();
 
         paths.forEach((path) => {
-          const shapes = SVGLoader.createShapes(path);
-
+          const shapes = path.toShapes(true); 
           shapes.forEach((shape) => {
             const geometry = new THREE.ExtrudeGeometry(shape, {
               depth: 20,
               bevelEnabled: false,
             });
-
-            geometry.center(); // ✅ this recenters each mesh properly
+            geometry.center();
 
             const material = new THREE.MeshStandardMaterial({
               color: '#c52424',
               side: THREE.DoubleSide,
-              metalness: 0,
-              roughness: 1,
-              wireframe: true,
+              metalness: 0.8,
+              roughness: 0.3,
+              emissive: '#c52424',
+              emissiveIntensity: 0.1,
             });
 
             const mesh = new THREE.Mesh(geometry, material);
-            group.add(mesh);
+            svgGroup.add(mesh);
           });
         });
 
-        // Scale and add to scene
-        group.scale.set(0.03, 0.03, 0.03);
-        if (groupRef.current) {
-          groupRef.current.add(group);
-        }
+        svgGroup.scale.set(0.03, 0.03, 0.03);
 
+        if (isMounted && groupRef.current) {
+          groupRef.current.add(svgGroup);
+        }
       } catch (error) {
         console.error('Error loading SVG:', error);
       }
     };
 
     loadSVG();
+
+    return () => {
+      isMounted = false;
+      // Optional: clean up geometry/material from previous renders
+      if (groupRef.current) {
+        groupRef.current.clear();
+      }
+    };
   }, [url]);
 
   useFrame(() => {

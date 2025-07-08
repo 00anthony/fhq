@@ -31,7 +31,7 @@ const Footer = () => {
                     </div>
 
                     {/* Social Media Links */}
-                    <div className="flex justify-center flex-col items-center text-center">
+                    <div className="flex flex-col items-center text-center">
                         <h2 className="text-xl mb-4">Follow Us</h2>
                         <nav aria-label="Social media">
                             <ul className="flex space-x-4">
