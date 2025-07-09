@@ -41,9 +41,6 @@ const BarberCard = ({
   const showNext = () =>
     setSelectedIdx((i) => (i !== null ? (i < workPics.length - 1 ? i + 1 : 0) : 0));
 
-  const isVideo = (media: WorkMedia) => media.type === 'video';
-
-
   return (
     <>
       <div
