@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import NavLinks from './NavLinks';
 import Link from 'next/link';
-import SpinningLogo from './SpinningLogo';
+import SpinningLogo from './NewSpinningLogo';
 
 const NavBar = () => {
     
