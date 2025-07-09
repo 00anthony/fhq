@@ -5,12 +5,12 @@ const Footer = () => {
                 <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
 
                     {/* Contact Info */}
-                    <div className=''>
-                    <h2 className="text-xl mb-4">Contact Us</h2>
-                    <p><strong>Address:</strong> 123 Main St, Your City, ST 12345</p>
-                    <p><strong>Phone:</strong> <a href="tel:1234567890" className="text-blue-400 hover:underline">(123) 456-7890</a></p>
-                    <p><strong>Email:</strong> <a href="mailto:contact@yourbusiness.com" className="text-blue-400 hover:underline">contact@yourbusiness.com</a></p>
-                    <p><strong>Hours:</strong> Mon–Fri: 9am–5pm</p>
+                    <div className='flex flex-col items-center text-center'>
+                        <h2 className="text-xl mb-4">Contact Us</h2>
+                        <p><strong>Address:</strong> 123 Main St, Your City, ST 12345</p>
+                        <p><strong>Phone:</strong> <a href="tel:1234567890" className="text-blue-400 hover:underline">(123) 456-7890</a></p>
+                        <p><strong>Email:</strong> <a href="mailto:contact@yourbusiness.com" className="text-blue-400 hover:underline">contact@yourbusiness.com</a></p>
+                        <p><strong>Hours:</strong> Mon–Fri: 9am–5pm</p>
                     </div>
 
                     {/* Google Map Embed */}

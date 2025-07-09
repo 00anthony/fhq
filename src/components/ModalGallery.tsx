@@ -4,20 +4,21 @@ import { LazyMotion, domAnimation, m, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import type { WorkMedia } from '../data/barbers'; 
+
 
 type ModalGalleryProps = {
-  workPics: string[];
+  media: WorkMedia[];
   selectedIdx: number;
   onClose: () => void;
   showPrev: () => void;
   showNext: () => void;
 };
 
-const isVideo = (src: string) =>
-  src.endsWith('.mp4') || src.endsWith('.webm') || src.endsWith('.mov');
+const isVideo = (media: WorkMedia) => media.type === 'video';
 
 export default function ModalGallery({
-  workPics,
+  media,
   selectedIdx,
   onClose,
   showPrev,
@@ -48,17 +49,18 @@ export default function ModalGallery({
             transition={{ type: 'spring', stiffness: 200, damping: 20 }}
             onClick={(e) => e.stopPropagation()} // prevent inner clicks from bubbling
           >
-            {isVideo(workPics[selectedIdx]) ? (
+            {isVideo(media[selectedIdx]) ? (
               <video
-                src={workPics[selectedIdx]}
-                controls
-                autoPlay
+                src={media[selectedIdx].src}  // <-- Use .src here
+                playsInline
                 muted
+                preload="metadata"
+                controls
                 className="w-full max-h-[90vh] rounded-lg object-contain"
               />
             ) : (
               <Image
-                src={workPics[selectedIdx]}
+                src={media[selectedIdx].src}  // <-- Use .src here
                 alt="Work preview"
                 width={1200}
                 height={800}

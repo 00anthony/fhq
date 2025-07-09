@@ -7,11 +7,13 @@ import { FaInstagram, FaTiktok } from 'react-icons/fa';
 import { LazyMotion, domAnimation, m } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import { memo } from 'react'; //memoised card so array(barber.ts) must be static
+import type { WorkMedia } from '../data/barbers'; 
+
 
 type BarberCardProps = {
   name?: string;
   profilePic?: string;
-  workPics?: string[];
+  workPics?: WorkMedia[]; // <- UPDATED
   instagram?: string;
   tiktok?: string;
   bookLink?: string;
@@ -39,8 +41,8 @@ const BarberCard = ({
   const showNext = () =>
     setSelectedIdx((i) => (i !== null ? (i < workPics.length - 1 ? i + 1 : 0) : 0));
 
-  const isVideo = (src: string) =>
-    src.endsWith('.mp4') || src.endsWith('.webm') || src.endsWith('.mov');
+  const isVideo = (media: WorkMedia) => media.type === 'video';
+
 
   return (
     <>
@@ -99,21 +101,23 @@ const BarberCard = ({
             tabIndex={0}
             role="group"
           >
-            {workPics.map((src, idx) =>
-              isVideo(src) ? (
+            {workPics.map((media, idx) =>
+              media.type === 'video' ? (
                 <video
                   key={idx}
-                  src={src}
-                  muted
-                  loop
+                  src={media.src}
+                  poster={media.poster}
+                  aria-label={`Video work ${idx + 1} by ${name}`}
                   playsInline
+                  muted
+                  preload="metadata"
                   onClick={() => setSelectedIdx(idx)}
                   className="h-20 w-28 flex-shrink-0 rounded-lg object-cover cursor-pointer snap-start"
                 />
               ) : (
                 <Image
                   key={idx}
-                  src={src}
+                  src={media.src}
                   alt={`work ${idx + 1}`}
                   width={112}
                   height={80}
@@ -123,8 +127,8 @@ const BarberCard = ({
                 />
               )
             )}
-            
           </div>
+
 
           <div className="flex gap-4 text-2xl mb-4">
             <a href={instagram} target="_blank" rel="noopener noreferrer" className="text-pink-600 hover:text-pink-700">
@@ -143,7 +147,7 @@ const BarberCard = ({
 
       {selectedIdx !== null && (
         <ModalGallery
-          workPics={workPics}
+          media={workPics}
           selectedIdx={selectedIdx}
           onClose={() => setSelectedIdx(null)}
           showPrev={showPrev}
