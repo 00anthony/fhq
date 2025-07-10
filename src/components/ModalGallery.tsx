@@ -54,6 +54,7 @@ export default function ModalGallery({
                 src={media[selectedIdx].src}  // <-- Use .src here
                 playsInline
                 muted
+                autoPlay
                 preload="metadata"
                 controls
                 className="w-full max-h-[90vh] rounded-lg object-contain"
