@@ -56,7 +56,7 @@ const BarberCard = ({
           className="object-cover absolute inset-0 z-0"
         />
 
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/40 opacity-100 group-hover:opacity-60 transition-opacity duration-300"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/40 opacity-100 group-hover:opacity-60 group-focus:opacity-60 transition-opacity duration-300"></div>
         <LazyMotion features={domAnimation}>
           <m.h3
             className="absolute top-4 left-1/2 -translate-x-1/2 text-white text-xl"
