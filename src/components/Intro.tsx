@@ -13,7 +13,7 @@ const Intro = () => {
           className="max-w-5xl mx-auto flex flex-col-reverse lg:flex-row py-8 justify-between"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.6 }}
+          viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
         >
           <div className="lg:w-1/2 flex flex-col lg:mx-4 justify-center">
@@ -31,7 +31,7 @@ const Intro = () => {
             className="flex-col my-4 text-center lg:my-0 lg:justify-end w-full lg:w-1/2 px-8"
             initial={{ opacity: 0, scale: 0.8 }}
             whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true, amount: 0.6 }}
+            viewport={{ once: true, amount: 0.3 }}
             transition={{ delay: 0.5, duration: 0.6, ease: 'easeOut' }}
           >
             <SectionHeader title="Welcome to Faded Headquarters" />

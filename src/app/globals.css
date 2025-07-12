@@ -34,4 +34,18 @@
     -webkit-overflow-scrolling: touch; /* iOS native momentum scroll */
   }
 }
+/* Masonry styles */
+.my-masonry-grid {
+  display: -webkit-box; /* fallback for older browsers */
+  display: -ms-flexbox;
+  display: flex;
+  margin-left: -1rem; /* gutter */
+  width: auto;
+}
+.my-masonry-grid_column {
+  padding-left: 1rem;
+  background-clip: padding-box;
+}
+
+
 @plugin "tailwind-scrollbar-hide";

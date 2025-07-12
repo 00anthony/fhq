@@ -23,11 +23,12 @@ const NavLinks = ({ closeMenu }: NavLinksProps) => {
       </Link>
       <Link
         className="px-4 py-2 font-extrabold text-white hover:text-red-900 flex items-center"
-        href="/#booking"
+        href="/gallery"
         onClick={() => closeMenu?.()}
       >
-        Portfolio
+        Gallery
       </Link>
+
       <Link
         className="px-4 py-2 font-extrabold text-white hover:text-red-900 flex items-center"
         href="/#footer"

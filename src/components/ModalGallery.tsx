@@ -2,20 +2,28 @@
 
 import { LazyMotion, domAnimation, m, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import type { WorkMedia } from '../data/barbers'; 
+import BookingModal from './BookingModal';
 
+// Unified media type
+type MediaItem = {
+  type: 'image' | 'video';
+  src: string;
+  style?: string;
+  barber?: string;
+  barberId?: string;
+};
 
 type ModalGalleryProps = {
-  media: WorkMedia[];
+  media: MediaItem[];
   selectedIdx: number;
   onClose: () => void;
   showPrev: () => void;
   showNext: () => void;
 };
 
-const isVideo = (media: WorkMedia) => media.type === 'video';
+const isVideo = (media: MediaItem) => media.type === 'video';
 
 export default function ModalGallery({
   media,
@@ -24,22 +32,25 @@ export default function ModalGallery({
   showPrev,
   showNext,
 }: ModalGalleryProps) {
+  const [showBooking, setShowBooking] = useState(false);
+
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = '';
     };
-  }, []);
+  }, [media, selectedIdx]);
 
   const modalContent = (
     <LazyMotion features={domAnimation}>
       <AnimatePresence>
         <m.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+          key={media[selectedIdx].src}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 overflow-y-auto"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          onClick={onClose} // closes on background click
+          onClick={onClose}
         >
           <m.div
             className="relative max-w-3xl w-full mx-4 max-h-[90vh]"
@@ -47,28 +58,42 @@ export default function ModalGallery({
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-            onClick={(e) => e.stopPropagation()} // prevent inner clicks from bubbling
+            onClick={(e) => e.stopPropagation()}
           >
             {isVideo(media[selectedIdx]) ? (
               <video
-                src={media[selectedIdx].src}  // <-- Use .src here
+                src={media[selectedIdx].src}
                 playsInline
                 muted
                 autoPlay
+                loop
                 preload="metadata"
                 controls
                 className="w-full max-h-[90vh] rounded-lg object-contain"
               />
             ) : (
               <Image
-                src={media[selectedIdx].src}  // <-- Use .src here
-                alt="Work preview"
+                src={media[selectedIdx].src}
+                alt="preview photo"
                 width={1200}
                 height={800}
                 className="w-full max-h-[90vh] rounded-lg object-contain"
               />
             )}
 
+            {/* CTA Section */}
+            {media[selectedIdx].barber && (
+              <button
+                onClick={() => setShowBooking(true)}
+                className="block mx-auto my-4 bg-red-900/50 hover:bg-red-900 backdrop-blur-sm text-white px-4 py-2 rounded-xl transition cursor-pointer"
+              >
+                Book {media[selectedIdx].barber}
+              </button>
+            )}
+
+
+
+            {/* Modal Controls */}
             <button
               onClick={onClose}
               className="absolute top-2 right-2 text-white text-xl bg-black/60 px-2 py-1 rounded-full hover:bg-black/80"
@@ -95,5 +120,17 @@ export default function ModalGallery({
 
   if (typeof window === 'undefined') return null;
 
-  return createPortal(modalContent, document.body);
+  return createPortal(
+  <>
+    {modalContent}
+    {showBooking && media[selectedIdx].barber && (
+      <BookingModal
+        barberName={media[selectedIdx].barber}
+        onClose={() => setShowBooking(false)}
+      />
+    )}
+  </>,
+  document.body
+);
+
 }

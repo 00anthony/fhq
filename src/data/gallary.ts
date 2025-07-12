@@ -1,0 +1,73 @@
+// src/data/gallery.ts
+import { GalleryItem } from '@/types/gallery'
+
+export const galleryData: GalleryItem[] = [
+  {
+    id: 1,
+    barber: 'Jay',
+    barberId: 'jay',
+    style: 'Fade & Line-Up',
+    src: '/barbers/los/profile.avif',
+    type: 'image',
+    hairStyle: ['Fade', 'Buzz Cut'],
+    beardStyle: 'Stubble',
+    equipment: ['Clippers'],
+  },
+  {
+    id: 2,
+    barber: 'Luis',
+    barberId: 'luis',
+    style: 'Pompadour Video Demo',
+    src: '/barbers/JJ/drop-beard.mp4',
+    type: 'video',
+    hairStyle: ['Pompadour'],
+    beardStyle: 'Full Beard',
+    equipment: ['Scissors'],
+  },
+  {
+    id: 3,
+    barber: 'Luis',
+    barberId: 'luis',
+    style: 'Taper + Design',
+    src: '/barbers/JJ/taper-design.avif',
+    type: 'image',
+    hairStyle: ['Fade', 'Design'],
+    beardStyle: 'Full Beard',
+    equipment: ['Scissors'],
+  },
+  {
+    id: 4,
+    barber: 'Jay',
+    barberId: 'jay',
+    style: 'Drop Fade',
+    src: '/barbers/JJ/drop.avif',
+    type: 'image',
+    hairStyle: ['Fade', 'Drop'],
+    beardStyle: 'Goatee',
+    equipment: ['Razor', 'Clippers'],
+  },
+  {
+    id: 5,
+    barber: 'Jay',
+    barberId: 'jay',
+    style: 'Drop + Design',
+    src: '/barbers/JJ/drop-design.avif',
+    type: 'image',
+    hairStyle: ['Fade', 'Drop'],
+    beardStyle: 'Stubble',
+    equipment: ['Clippers'],
+  },
+  {
+    id: 6,
+    barber: 'Luis',
+    barberId: 'luis',
+    style: 'Taper',
+    src: '/barbers/JJ/profile.avif',
+    type: 'image',
+    hairStyle: ['Fade'],
+    beardStyle: 'Goatee',
+    equipment: ['Scissors', 'Razor'],
+  },
+]
+
+
