@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+#service account key
+server/credentials/service-account.json
+
+# Ignore credential files
+server/credentials/
+*.json
+
+/src/generated/prisma
