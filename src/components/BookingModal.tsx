@@ -1,6 +1,8 @@
 'use client'
 
+import 'react-datepicker/dist/react-datepicker.css'
 import { useEffect, useState } from 'react'
+import DatePicker from 'react-datepicker'
 
 type BookingModalProps = {
   barberName: string
@@ -14,6 +16,9 @@ export default function BookingModal({ barberName, onClose }: BookingModalProps)
   const [selectedBarber, setSelectedBarber] = useState(barberName || '')
   const [selectedService, setSelectedService] = useState('')
   const [selectedDateTime, setSelectedDateTime] = useState('')
+  const [selectedDate, setSelectedDate] = useState('');
+  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
+
   const [file, setFile] = useState<File | null>(null)
   const [formData, setFormData] = useState({
     name: '',
@@ -42,18 +47,60 @@ export default function BookingModal({ barberName, onClose }: BookingModalProps)
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log({
-      selectedBarber,
-      selectedService,
-      selectedDateTime,
-      file,
-      ...formData,
-    })
-    alert('Booking submitted!')
-    onClose()
+
+    const payload = {
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      comments: formData.comments,
+      datetime: selectedDateTime,
+      service: selectedService,
+      barber: selectedBarber,
+    }
+
+    try {
+      const res = await fetch('/api/book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      const result = await res.json()
+      if (result.success) {
+        alert('Booking confirmed!')
+        onClose()
+      } else {
+        alert('Booking failed: ' + (result.error || 'Unknown error'))
+      }
+    } catch (err) {
+      console.error('Booking failed', err)
+      alert('Something went wrong.')
+    }
   }
+
+  useEffect(() => {
+    const fetchAvailability = async () => {
+      if (!selectedDate) return;
+
+      const startOfDay = new Date(selectedDate);
+      const endOfDay = new Date(selectedDate);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const params = new URLSearchParams({
+        start: startOfDay.toISOString(),
+        end: endOfDay.toISOString(),
+      });
+
+      const res = await fetch(`/api/calendar/availability?${params}`);
+      const data = await res.json();
+      setAvailableTimes(data.availableSlots || []);
+    };
+
+    fetchAvailability();
+  }, [selectedDate]);
+
 
   return (
     <div
@@ -91,13 +138,44 @@ export default function BookingModal({ barberName, onClose }: BookingModalProps)
             ))}
           </select>
 
-          {/* Date & Time */}
-          <input
-            type="datetime-local"
-            value={selectedDateTime}
-            onChange={e => setSelectedDateTime(e.target.value)}
-            className="border p-2 rounded"
+          {/* Select Date */}
+          <DatePicker
+            selected={selectedDate ? new Date(selectedDate) : null}
+            onChange={(date: Date | null) => {
+              if (date) {
+                const isoDate = date.toISOString().split('T')[0]; // yyyy-mm-dd
+                setSelectedDate(isoDate);
+                setSelectedDateTime('');
+              }
+            }}
+            className="border p-2 rounded w-full"
+            placeholderText="Select a date"
+            dateFormat="MMMM d, yyyy"
           />
+
+
+          {/* Time Slot Dropdown */}
+          {availableTimes.length > 0 && (
+            <select
+              value={selectedDateTime}
+              onChange={(e) => setSelectedDateTime(e.target.value)}
+              className="border p-2 rounded"
+            >
+              <option value="">Select a Time</option>
+              {availableTimes.map(time => {
+                const localTime = new Date(time).toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                });
+                return (
+                  <option key={time} value={time}>
+                    {localTime}
+                  </option>
+                );
+              })}
+            </select>
+          )}
+
 
           {/* Upload Style Photo */}
           <label className="text-sm">Upload a style reference (optional):</label>

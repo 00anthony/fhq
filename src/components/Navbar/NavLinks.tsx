@@ -1,10 +1,16 @@
+'use client';
+
 import Link from 'next/link';
+import { useSession, signIn, signOut } from 'next-auth/react';
 
 type NavLinksProps = {
   closeMenu?: () => void;
 };
 
 const NavLinks = ({ closeMenu }: NavLinksProps) => {
+  const { data: session } = useSession();
+  console.log(session);
+
   return (
     <nav className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4 text-white">
       <Link
@@ -68,6 +74,13 @@ const NavLinks = ({ closeMenu }: NavLinksProps) => {
           />
         </svg>
       </Link>
+      {/* Auth Button */}
+      <button
+        onClick={() => session ? signOut() : signIn('google')}
+        className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-xl transition"
+      >
+        {session ? 'Sign Out' : 'Sign In'}
+      </button>
     </nav>
   );
 };
