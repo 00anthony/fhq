@@ -12,12 +12,18 @@ type BookingModalProps = {
 const barbers = ['Jay', 'Luis', 'Los']
 const services = ['Haircut', 'Beard Trim', 'Fade + Line-Up', 'Full Service']
 
+
 export default function BookingModal({ barberName, onClose }: BookingModalProps) {
   const [selectedBarber, setSelectedBarber] = useState(barberName || '')
   const [selectedService, setSelectedService] = useState('')
   const [selectedDateTime, setSelectedDateTime] = useState('')
   const [selectedDate, setSelectedDate] = useState('');
   const [availableTimes, setAvailableTimes] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false)
+  const [fileError, setFileError] = useState<string | null>(null)
+  const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
+  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif']
+
 
   const [file, setFile] = useState<File | null>(null)
   const [formData, setFormData] = useState({
@@ -42,29 +48,54 @@ export default function BookingModal({ barberName, onClose }: BookingModalProps)
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFileError(null)
     if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0])
+      const selectedFile = e.target.files[0]
+
+      if (!ALLOWED_TYPES.includes(selectedFile.type)) {
+        setFileError('Invalid file type. Only JPG, PNG, GIF allowed.')
+        setFile(null)
+        return
+      }
+
+      if (selectedFile.size > MAX_FILE_SIZE) {
+        setFileError('File size too large. Max 5 MB allowed.')
+        setFile(null)
+        return
+      }
+
+      setFile(selectedFile)
     }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setFileError(null)
 
-    const payload = {
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      comments: formData.comments,
-      datetime: selectedDateTime,
-      service: selectedService,
-      barber: selectedBarber,
+    // Basic required fields validation (you can expand)
+    if (!formData.name || !formData.email || !selectedDateTime || !selectedService || !selectedBarber) {
+      alert('Please fill out all required fields.')
+      return
+    }
+
+    setLoading(true)
+    const formDataToSend = new FormData()
+    formDataToSend.append('name', formData.name)
+    formDataToSend.append('email', formData.email)
+    formDataToSend.append('phone', formData.phone)
+    formDataToSend.append('comments', formData.comments)
+    formDataToSend.append('datetime', selectedDateTime)
+    formDataToSend.append('service', selectedService)
+    formDataToSend.append('barber', selectedBarber)
+
+    if (file) {
+      formDataToSend.append('upload', file)
     }
 
     try {
       const res = await fetch('/api/book', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: formDataToSend,
       })
 
       const result = await res.json()
@@ -77,8 +108,12 @@ export default function BookingModal({ barberName, onClose }: BookingModalProps)
     } catch (err) {
       console.error('Booking failed', err)
       alert('Something went wrong.')
+    } finally {
+      setLoading(false)
     }
   }
+
+
 
   useEffect(() => {
     const fetchAvailability = async () => {
@@ -113,7 +148,7 @@ export default function BookingModal({ barberName, onClose }: BookingModalProps)
       >
         <h2 className="text-xl mb-4 text-center">Book {barberName}</h2>
 
-        <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
+        <form onSubmit={handleSubmit} aria-busy={loading} className="flex flex-col space-y-4">
           {/* Barber Dropdown */}
           <select
             value={selectedBarber}
@@ -185,6 +220,9 @@ export default function BookingModal({ barberName, onClose }: BookingModalProps)
             onChange={handleFileChange}
             className="border p-2 rounded"
           />
+          {fileError && (
+            <p className="text-red-600 text-sm mt-1">{fileError}</p>
+          )}
 
           {/* Contact Info */}
           <input
@@ -220,10 +258,11 @@ export default function BookingModal({ barberName, onClose }: BookingModalProps)
           ></textarea>
 
           <button
+            disabled={loading}
             type="submit"
             className="bg-red-600 text-white py-2 rounded hover:bg-red-700 transition"
           >
-            Confirm Booking
+            {loading ? 'Booking...' : 'Confirm Booking'}
           </button>
         </form>
 
