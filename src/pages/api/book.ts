@@ -48,6 +48,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const bookingId = uuidv4()
   const prisma = new PrismaClient()
 
+  // ✅ TEMP DEBUG LOG — Safe to include
+  console.log('DB URL starts with:', process.env.DATABASE_URL?.slice(0, 20))
+
   if (!datetime || !name || !email || !service || !barber) {
     return res.status(400).json({ error: 'Missing fields' })
   }
