@@ -23,9 +23,11 @@ model Booking {
   phone       String
   comments    String?
   service     String
-  datetime    DateTime
-  createdAt   DateTime @default(now())
+  datetime    DateTime  // Appointment time in UTC
+  timeZone    String    // User's original timezone
+  createdAt   DateTime  @default(now())
 
   @@index([email])
   @@index([datetime])
 }
+

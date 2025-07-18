@@ -6,8 +6,9 @@ import { v4 as uuidv4 } from 'uuid'
 import { PrismaClient } from '@prisma/client'
 import auth from '@/lib/google-auth'
 import resend from '@/lib/resend'
+import { DateTime } from 'luxon';
 
-// Disable the default body parser so we can handle multipart form data
+// Disable Next.js default body parser to handle FormData
 export const config = {
   api: {
     bodyParser: false,
@@ -44,38 +45,47 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const datetime = getField(fields.datetime)
   const service = getField(fields.service)
   const barber = getField(fields.barber)
+  const timeZone = getField(fields.timeZone);
 
   const bookingId = uuidv4()
   const prisma = new PrismaClient()
-
-  // ✅ TEMP DEBUG LOG — Safe to include
-  console.log('DB URL starts with:', process.env.DATABASE_URL?.slice(0, 20))
 
   if (!datetime || !name || !email || !service || !barber) {
     return res.status(400).json({ error: 'Missing fields' })
   }
 
   // Handle uploaded file (optional)
-  let attachment = null
-  const file = files.upload
-  const uploadedFile = Array.isArray(file) ? file[0] : file
+  let attachment = null;
+  const file = files.upload;
+  const uploadedFile = Array.isArray(file) ? file[0] : file;
 
   if (uploadedFile?.filepath) {
-    const fileBuffer = await fs.readFile(uploadedFile.filepath)
+    const fileBuffer = await fs.readFile(uploadedFile.filepath);
     attachment = {
       filename: uploadedFile.originalFilename || 'attachment',
       content: fileBuffer.toString('base64'),
-    }
+    };
   }
 
-  const calendar = google.calendar({ version: 'v3', auth })
-
   try {
+    // ✅ Convert user's datetime (local) → UTC using Luxon
+    const userDateTime = DateTime.fromISO(datetime, { zone: timeZone });
+    if (!userDateTime.isValid) {
+      throw new Error('Invalid datetime or timezone');
+    }
+
+    const utcDateTime = userDateTime.toUTC();
+    const eventStart = utcDateTime.toISO();
+    const eventEnd = utcDateTime.plus({ minutes: 30 }).toISO();
+
+    // ✅ Setup Google Calendar
+    const calendar = google.calendar({ version: 'v3', auth });
+
     const barberCalendars: Record<string, string> = {
-      Jay: 'anthonytij3@gmail.com', // Example/test calendar
+      Jay: 'anthonytij3@gmail.com',
       Luis: 'luisbarber@gmail.com',
       Los: 'losbarber@gmail.com',
-    }
+    };
 
     const calendarId = barberCalendars[barber] || 'primary'
 
@@ -84,13 +94,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       requestBody: {
         summary: `${service} with ${barber}`,
         description: `Name: ${name}\nPhone: ${phone}\n\n${comments}`,
-        start: { dateTime: datetime },
-        end: {
-          dateTime: new Date(new Date(datetime).getTime() + 30 * 60 * 1000).toISOString(),
-        },
+        start: { dateTime: eventStart, timeZone },
+        end: { dateTime: eventEnd, timeZone },
       },
-    })
+    });
 
+    if (!event.data.id) throw new Error('Google Calendar did not return an event ID');
+
+    // ✅ Format email time in user's timezone
+    const formattedTime = userDateTime.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY);
+
+    // ✅ Barber email map
     const barberEmails: Record<string, string> = {
       Jay: 'anthonytij3@gmail.com',
       Luis: 'luis@barbershop.com',
@@ -98,11 +112,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const barberEmail = barberEmails[barber] || 'fallback@barbershop.com'
-
-    const formattedTime = new Date(datetime).toLocaleString('en-US', {
-      dateStyle: 'long',
-      timeStyle: 'short',
-    })
 
     // Send client confirmation email
     await resend.emails.send({
@@ -134,8 +143,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       attachments: attachment ? [attachment] : [],
     })
 
-    if (!event.data.id) throw new Error('Google Calendar did not return an event ID')
-
+    // ✅ Save booking in DB (UTC datetime + user timezone)
     await prisma.booking.create({
       data: {
         id: bookingId,
@@ -147,9 +155,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         phone,
         comments,
         service,
-        datetime: new Date(datetime),
+        datetime: utcDateTime.toJSDate(), // Store in UTC
+        timeZone, // New field
       },
-    })
+    });
 
     return res.status(200).json({ success: true, eventId: event.data.id, bookingId })
   } catch (error) {

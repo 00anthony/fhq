@@ -79,6 +79,9 @@ export default function BookingModal({ barberName, onClose }: BookingModalProps)
     }
 
     setLoading(true)
+
+    const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
     const formDataToSend = new FormData()
     formDataToSend.append('name', formData.name)
     formDataToSend.append('email', formData.email)
@@ -87,6 +90,7 @@ export default function BookingModal({ barberName, onClose }: BookingModalProps)
     formDataToSend.append('datetime', selectedDateTime)
     formDataToSend.append('service', selectedService)
     formDataToSend.append('barber', selectedBarber)
+    formDataToSend.append('timeZone', userTimeZone);
 
     if (file) {
       formDataToSend.append('upload', file)
@@ -210,7 +214,6 @@ export default function BookingModal({ barberName, onClose }: BookingModalProps)
               })}
             </select>
           )}
-
 
           {/* Upload Style Photo */}
           <label className="text-sm">Upload a style reference (optional):</label>

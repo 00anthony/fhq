@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@prisma/client": "^6.11.1",
+    "@prisma/client": "^6.12.0",
     "@react-three/drei": "^10.4.2",
     "@react-three/fiber": "^9.2.0",
     "aos": "^2.3.4",
@@ -17,6 +17,7 @@
     "formidable": "^3.5.4",
     "framer-motion": "^12.23.0",
     "googleapis": "^152.0.0",
+    "luxon": "^3.7.1",
     "next": "15.3.4",
     "next-auth": "^4.24.11",
     "notiflix": "^3.2.8",
@@ -35,12 +36,13 @@
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/formidable": "^3.4.5",
+    "@types/luxon": "^3.6.2",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
-    "prisma": "^6.11.1",
+    "prisma": "^6.12.0",
     "tailwindcss": "^4.1.11",
     "typescript": "^5"
   }

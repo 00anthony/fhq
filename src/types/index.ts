@@ -7,4 +7,5 @@ export type Booking = {
   datetime: string
   service: string
   barber: string
+   timeZone?: string; // ✅ Make it optional if older bookings might not have it
 }

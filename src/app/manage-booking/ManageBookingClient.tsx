@@ -57,7 +57,14 @@ export default function ManageBookingClient() {
     if (!newDatetime || !booking) return
 
     try {
-      await axios.post('/api/bookings/reschedule', { bookingId, newDatetime })
+      const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const isoDatetime = new Date(newDatetime).toISOString(); // Convert to UTC ISO
+
+      await axios.post('/api/bookings/reschedule', { 
+        bookingId, 
+        newDatetime: isoDatetime,
+        timeZone: userTimeZone
+      });
       setActionStatus('Booking successfully rescheduled.')
 
       setBooking({
@@ -92,7 +99,16 @@ export default function ManageBookingClient() {
           <p><strong>Client:</strong> {booking.name}</p>
           <p><strong>Barber:</strong> {booking.barber}</p>
           <p><strong>Service:</strong> {booking.service}</p>
-          <p><strong>When:</strong> {new Date(booking.datetime).toLocaleString()}</p>
+          <p>
+            <strong>When:</strong>{' '}
+            {new Date(booking.datetime).toLocaleString('en-US', {
+              dateStyle: 'long',
+              timeStyle: 'short',
+              timeZone: booking.timeZone || undefined
+            })} 
+            {booking.timeZone ? ` (${booking.timeZone})` : ''}
+          </p>
+
 
           <div className="border-t pt-4 space-y-2">
             <label className="block font-medium">New Time:</label>
