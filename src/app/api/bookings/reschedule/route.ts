@@ -1,28 +1,36 @@
-//Rescheduling logic + email
 import { google } from 'googleapis'
 import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import auth from '@/lib/google-auth'
 import resend from '@/lib/resend'
+import { DateTime } from 'luxon'
 
 const prisma = new PrismaClient()
 
 export async function POST(req: Request) {
-  const { bookingId, newDatetime } = await req.json()
-
-  if (!bookingId || !newDatetime) {
-    return NextResponse.json({ error: 'Missing bookingId or newDatetime' }, { status: 400 })
-  }
-
   try {
-    const booking = await prisma.booking.findUnique({ where: { id: bookingId } })
+    // Parse JSON body
+    const { bookingId, newDatetime, timeZone }: { bookingId: string; newDatetime: string; timeZone: string } =
+      await req.json()
 
+    if (!bookingId || !newDatetime || !timeZone) {
+      return NextResponse.json({ error: 'Missing bookingId, newDatetime, or timeZone' }, { status: 400 })
+    }
+
+    // 1. Convert ISO to Luxon DateTime in UTC
+    const dt = DateTime.fromISO(newDatetime, { zone: 'utc' })
+
+    // 2. Format for email using client's original time zone
+    const formattedTime = dt.setZone(timeZone).toLocaleString(DateTime.DATETIME_MED)
+
+    // Find booking
+    const booking = await prisma.booking.findUnique({ where: { id: bookingId } })
     if (!booking) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
     }
 
+    // Update Google Calendar event
     const calendar = google.calendar({ version: 'v3', auth })
-
     await calendar.events.patch({
       calendarId: booking.calendarId,
       eventId: booking.eventId,
@@ -34,22 +42,21 @@ export async function POST(req: Request) {
       },
     })
 
+    // 3. Update DB with UTC datetime and timeZone
     await prisma.booking.update({
       where: { id: bookingId },
-      data: { datetime: new Date(newDatetime) },
+      data: {
+        datetime: dt.toJSDate(), // stored in UTC
+        timeZone, // store original client time zone
+      },
     })
 
-    const formattedTime = new Date(newDatetime).toLocaleString('en-US', {
-      dateStyle: 'long',
-      timeStyle: 'short',
-    })
-
+    // Barber email map
     const barberEmails: Record<string, string> = {
       Jay: 'anthonytij3@gmail.com',
       Luis: 'luis@barbershop.com',
       Los: 'los@barbershop.com',
     }
-
     const barberEmail = barberEmails[booking.barber] || 'fallback@barbershop.com'
 
     // Client email
