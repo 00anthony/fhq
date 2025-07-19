@@ -1,22 +1,32 @@
 import { NextResponse } from 'next/server';
 import { getBusyTimes } from '@/lib/google-calendar';
 import { PrismaClient } from '@prisma/client';
+import { DateTime } from 'luxon';
+
 
 const prisma = new PrismaClient();
 
+const BARBER_TIMEZONE = 'America/Chicago';
 const START_HOUR = 9;
 const END_HOUR = 17;
 const SLOT_DURATION_MINUTES = 30;
 
 function generateTimeSlotsForDay(date: Date): string[] {
   const slots: string[] = [];
-  for (let hour = START_HOUR; hour < END_HOUR; hour++) {
-    for (let min = 0; min < 60; min += SLOT_DURATION_MINUTES) {
-      const slot = new Date(date);
-      slot.setHours(hour, min, 0, 0);
-      slots.push(slot.toISOString());
-    }
+
+  // Start at the given date in the barber's timezone at 9 AM
+  let current = DateTime.fromJSDate(date, { zone: BARBER_TIMEZONE })
+    .set({ hour: START_HOUR, minute: 0, second: 0, millisecond: 0 });
+
+  const end = current.set({ hour: END_HOUR, minute: 0 });
+
+  while (current < end) {
+    // Convert local barber time to UTC and store as ISO string
+    const iso = current.toUTC().toISO();
+    if (iso) slots.push(iso);
+    current = current.plus({ minutes: SLOT_DURATION_MINUTES });
   }
+
   return slots;
 }
 
@@ -58,8 +68,6 @@ export async function GET(request: Request) {
   if (endDate > twoWeeksFromNow) {
     return NextResponse.json({ error: 'End date cannot be more than 2 weeks from now' }, { status: 400 });
   }
-
-  // ... rest of your existing logic
 
   let busy = await getBusyTimes(start, end);
 
