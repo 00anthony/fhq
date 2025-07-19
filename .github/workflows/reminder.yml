@@ -11,4 +11,4 @@ jobs:
     steps:
       - name: Call Reminder API
         run: |
-          curl -X GET "https://YOUR_DOMAIN.com/api/reminder?secret=${{ secrets.REMINDER_SECRET }}"
+          curl -X GET "https://fhq-two.vercel.app/api/reminder?secret=${{ secrets.REMINDER_SECRET }}"
