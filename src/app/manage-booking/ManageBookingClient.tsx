@@ -14,6 +14,8 @@ export default function ManageBookingClient() {
   const [newDatetime, setNewDatetime] = useState('')
   const [actionStatus, setActionStatus] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
+  const [availableSlots, setAvailableSlots] = useState<string[]>([])
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   useEffect(() => {
     async function fetchBooking() {
@@ -21,6 +23,7 @@ export default function ManageBookingClient() {
       try {
         const res = await axios.get<Booking>(`/api/bookings?id=${bookingId}`)
         setBooking(res.data)
+        setSelectedDate(new Date(res.data.datetime)); // <- INIT SELECTED DATE
       } catch (err) {
         console.error(err)
         setError('Booking not found or an error occurred.')
@@ -32,12 +35,27 @@ export default function ManageBookingClient() {
   }, [bookingId])
 
   useEffect(() => {
-    if (booking) {
-      const isoString = new Date(booking.datetime).toISOString()
-      const localDatetime = isoString.slice(0, 16)
-      setNewDatetime(localDatetime)
-    }
-  }, [booking])
+    if (!selectedDate) return;
+
+    const fetchAvailability = async () => {
+      const startOfDay = new Date(selectedDate);
+      const endOfDay = new Date(selectedDate);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const params = new URLSearchParams({
+        start: startOfDay.toISOString(),
+        end: endOfDay.toISOString(),
+      });
+
+      const res = await fetch(`/api/calendar/availability?${params}`);
+      const data = await res.json();
+      setAvailableSlots(data.availableSlots || []);
+    };
+
+    fetchAvailability();
+  }, [selectedDate]);
+
+
 
   const handleCancel = async () => {
     setActionLoading(true)
@@ -111,28 +129,55 @@ export default function ManageBookingClient() {
 
 
           <div className="border-t pt-4 space-y-2">
-            <label className="block font-medium">New Time:</label>
+            <label className="block font-medium">New Date:</label>
             <input
-              type="datetime-local"
-              value={newDatetime}
-              onChange={e => setNewDatetime(e.target.value)}
+              type="date"
+              value={selectedDate ? selectedDate.toISOString().split('T')[0] : ''}
+              min={new Date().toISOString().split('T')[0]}
+              max={new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+              onChange={(e) => {
+                const date = new Date(e.target.value);
+                setSelectedDate(date);
+              }}
               className="border p-2 rounded w-full"
             />
+            <select
+              value={newDatetime}
+              onChange={(e) => setNewDatetime(e.target.value)}
+              className="border p-2 rounded w-full mt-2"
+              disabled={!availableSlots.length}
+            >
+              <option value="">Select a new time</option>
+              {availableSlots.map((slot) => (
+                <option key={slot} value={slot}>
+                  {new Date(slot).toLocaleString('en-US', {
+                    dateStyle: 'medium',
+                    timeStyle: 'short',
+                    timeZone: booking.timeZone || undefined,
+                  })}
+                </option>
+              ))}
+            </select>
+
+            {!availableSlots.length && selectedDate && (
+              <p className="text-sm text-red-600">No available times for this date. Please pick another.</p>
+            )}
+
             <button
               disabled={actionLoading || !newDatetime}
               onClick={handleReschedule}
               className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:opacity-50"
             >
-              Reschedule
+              {actionLoading ? "Rescheduling..." : "Reschedule"}
             </button>
           </div>
 
           <button
-            disabled={actionLoading || !newDatetime}
+            disabled={actionLoading}
             onClick={handleCancel}
             className="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700"
           >
-            Cancel Booking
+            {actionLoading ? "Cancelling..." : "Cancel"}
           </button>
 
           {actionStatus && (

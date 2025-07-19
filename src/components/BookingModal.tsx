@@ -7,23 +7,22 @@ import DatePicker from 'react-datepicker'
 type BookingModalProps = {
   barberName: string
   onClose: () => void
+  bookingId?: string
 }
 
 const barbers = ['Jay', 'Luis', 'Los']
 const services = ['Haircut', 'Beard Trim', 'Fade + Line-Up', 'Full Service']
 
 
-export default function BookingModal({ barberName, onClose }: BookingModalProps) {
+export default function BookingModal({ barberName, onClose, bookingId }: BookingModalProps) {
   const [selectedBarber, setSelectedBarber] = useState(barberName || '')
   const [selectedService, setSelectedService] = useState('')
-  const [selectedDateTime, setSelectedDateTime] = useState('')
-  const [selectedDate, setSelectedDate] = useState('');
-  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
+  const [selectedDateTime, setSelectedDateTime] = useState<Date | null>(null)
+  const [availableTimes, setAvailableTimes] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [fileError, setFileError] = useState<string | null>(null)
   const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
   const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif']
-
 
   const [file, setFile] = useState<File | null>(null)
   const [formData, setFormData] = useState({
@@ -68,6 +67,10 @@ export default function BookingModal({ barberName, onClose }: BookingModalProps)
     }
   }
 
+  const handleDateTimeChange = (date: Date | null) => {
+    setSelectedDateTime(date)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setFileError(null)
@@ -87,7 +90,7 @@ export default function BookingModal({ barberName, onClose }: BookingModalProps)
     formDataToSend.append('email', formData.email)
     formDataToSend.append('phone', formData.phone)
     formDataToSend.append('comments', formData.comments)
-    formDataToSend.append('datetime', selectedDateTime)
+    formDataToSend.append('datetime', selectedDateTime.toISOString())
     formDataToSend.append('service', selectedService)
     formDataToSend.append('barber', selectedBarber)
     formDataToSend.append('timeZone', userTimeZone);
@@ -95,7 +98,6 @@ export default function BookingModal({ barberName, onClose }: BookingModalProps)
     if (file) {
       formDataToSend.append('upload', file)
     }
-
     try {
       const res = await fetch('/api/book', {
         method: 'POST',
@@ -119,26 +121,49 @@ export default function BookingModal({ barberName, onClose }: BookingModalProps)
 
 
 
+  // Fetch available times when date part of selectedDateTime changes
   useEffect(() => {
-    const fetchAvailability = async () => {
-      if (!selectedDate) return;
+    if (!selectedDateTime) {
+      setAvailableTimes([])
+      return
+    }
 
-      const startOfDay = new Date(selectedDate);
-      const endOfDay = new Date(selectedDate);
-      endOfDay.setHours(23, 59, 59, 999);
+    const dateStr = selectedDateTime.toISOString().split('T')[0]
 
-      const params = new URLSearchParams({
-        start: startOfDay.toISOString(),
-        end: endOfDay.toISOString(),
-      });
+    const startOfDay = new Date(dateStr)
+    const endOfDay = new Date(dateStr)
+    endOfDay.setHours(23, 59, 59, 999)
 
-      const res = await fetch(`/api/calendar/availability?${params}`);
-      const data = await res.json();
-      setAvailableTimes(data.availableSlots || []);
-    };
+    const params = new URLSearchParams({
+      start: startOfDay.toISOString(),
+      end: endOfDay.toISOString(),
+    })
 
-    fetchAvailability();
-  }, [selectedDate]);
+    if (bookingId) params.append('bookingId', bookingId)
+
+    fetch(`/api/calendar/availability?${params}`)
+      .then(res => res.json())
+      .then(data => {
+        console.log("Available times (raw UTC):", data.availableSlots);
+        console.log(
+          "Available times (local):",
+          (data.availableSlots || []).map((t: string) => new Date(t).toString())
+        );
+        setAvailableTimes(data.availableSlots || [])
+      })
+      .catch(() => setAvailableTimes([]))
+  }, [selectedDateTime, bookingId])
+
+  //only shows future times
+  const now = new Date();
+  const availableTimesDates = availableTimes
+  .map((t: string) => {
+    const localDate = new Date(t);
+    console.log("Converted to local time:", localDate.toString());
+    return localDate;
+  })
+
+  .filter(time => time > now);
 
 
   return (
@@ -179,41 +204,18 @@ export default function BookingModal({ barberName, onClose }: BookingModalProps)
 
           {/* Select Date */}
           <DatePicker
-            selected={selectedDate ? new Date(selectedDate) : null}
-            onChange={(date: Date | null) => {
-              if (date) {
-                const isoDate = date.toISOString().split('T')[0]; // yyyy-mm-dd
-                setSelectedDate(isoDate);
-                setSelectedDateTime('');
-              }
-            }}
+            selected={selectedDateTime}
+            onChange={handleDateTimeChange}
+            minDate={new Date()}
+            maxDate={new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)}
+            showTimeSelect
+            timeIntervals={30}
+            includeTimes={availableTimesDates}
+            dateFormat="MMMM d, yyyy h:mm aa"
             className="border p-2 rounded w-full"
-            placeholderText="Select a date"
-            dateFormat="MMMM d, yyyy"
+            placeholderText="Select date and time"
           />
 
-
-          {/* Time Slot Dropdown */}
-          {availableTimes.length > 0 && (
-            <select
-              value={selectedDateTime}
-              onChange={(e) => setSelectedDateTime(e.target.value)}
-              className="border p-2 rounded"
-            >
-              <option value="">Select a Time</option>
-              {availableTimes.map(time => {
-                const localTime = new Date(time).toLocaleTimeString([], {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                });
-                return (
-                  <option key={time} value={time}>
-                    {localTime}
-                  </option>
-                );
-              })}
-            </select>
-          )}
 
           {/* Upload Style Photo */}
           <label className="text-sm">Upload a style reference (optional):</label>

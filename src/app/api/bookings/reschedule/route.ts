@@ -18,7 +18,19 @@ export async function POST(req: Request) {
     }
 
     // 1. Convert ISO to Luxon DateTime in UTC
-    const dt = DateTime.fromISO(newDatetime, { zone: 'utc' })
+    const dt = DateTime.fromISO(newDatetime, { zone: 'utc' });
+    if (!dt.isValid) {
+      return NextResponse.json({ error: 'Invalid datetime format' }, { status: 400 });
+    }
+    const now = DateTime.utc();
+    const twoWeeksFromNow = now.plus({ weeks: 2 });
+
+    if (dt < now) {
+      return NextResponse.json({ error: 'Cannot reschedule to a past date/time' }, { status: 400 });
+    }
+    if (dt > twoWeeksFromNow) {
+      return NextResponse.json({ error: 'Cannot reschedule more than two weeks in advance' }, { status: 400 });
+    }
 
     // 2. Format for email using client's original time zone
     const formattedTime = dt.setZone(timeZone).toLocaleString(DateTime.DATETIME_MED)

@@ -26,6 +26,7 @@ model Booking {
   datetime    DateTime  // Appointment time in UTC
   timeZone    String    // User's original timezone
   createdAt   DateTime  @default(now())
+  reminderSent  Boolean  @default(false)
 
   @@index([email])
   @@index([datetime])

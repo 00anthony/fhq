@@ -73,6 +73,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!userDateTime.isValid) {
       throw new Error('Invalid datetime or timezone');
     }
+    // ✅ Check for past time booking
+    if (userDateTime < DateTime.now().setZone(timeZone)) {
+      return res.status(400).json({ error: 'Cannot book a past time' })
+    }
+    // ✅ Validate against available slots
+    try {
+      const startOfDay = userDateTime.startOf('day').toUTC().toISO();
+      const endOfDay = userDateTime.endOf('day').toUTC().toISO();
+
+      // Call your availability logic or endpoint
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/calendar/availability?start=${startOfDay}&end=${endOfDay}&bookingId=${bookingId || ''}`
+      );
+      const availabilityData = await response.json();
+      const availableSlots: string[] = availabilityData.availableSlots || [];
+
+      const isAvailable = availableSlots.some(slot => {
+        return DateTime.fromISO(slot).toUTC().toISO() === userDateTime.toUTC().toISO();
+      });
+
+      if (!isAvailable) {
+        return res.status(400).json({ error: 'Selected time is no longer available.' });
+      }
+    } catch (err) {
+      console.error('Failed to validate available slots:', err);
+      return res.status(500).json({ error: 'Failed to validate available slots' });
+    }
 
     const utcDateTime = userDateTime.toUTC();
     const eventStart = utcDateTime.toISO();
