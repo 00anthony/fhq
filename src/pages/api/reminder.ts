@@ -6,7 +6,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
    // Verify secret
   const secret = req.query.secret;
   if (secret !== process.env.REMINDER_SECRET) {
-    console.log('[REMINDER] Invalid secret:', secret); // Log invalid attempts
+    console.log('[REMINDER] Invalid secret: ', secret?.slice(0, 3) + '***');
     return res.status(403).json({ message: 'Forbidden' });
   }
 
