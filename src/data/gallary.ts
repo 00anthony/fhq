@@ -20,6 +20,7 @@ export const galleryData: GalleryItem[] = [
     style: 'Pompadour Video Demo',
     src: '/barbers/JJ/drop-beard.mp4',
     type: 'video',
+    poster: '/barbers/JJ/drop-beard-poster.webp',
     hairStyle: ['Pompadour'],
     beardStyle: 'Full Beard',
     equipment: ['Scissors'],

@@ -5,6 +5,7 @@ export interface GalleryItem {
   style: string
   src: string           
   type: 'image' | 'video' 
+  poster?: string; // optional, only needed for video
   hairStyle?: string[]
   beardStyle?: string
   equipment?: string[]

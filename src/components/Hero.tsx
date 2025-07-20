@@ -71,6 +71,7 @@ const Hero = () => {
           muted
           playsInline
           onLoadedData={handleVideoLoad}
+          controls={false} // Explicitly ensure no controls
         />
       )}
 

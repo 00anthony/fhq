@@ -114,6 +114,7 @@ export default function GalleryGrid({ items, barbers }: GalleryGridProps) {
               {item.type === 'video' ? (
                 <video
                   src={item.src}
+                  poster={item.poster}
                   className="w-full h-auto object-cover rounded-xl"
                   muted
                   
