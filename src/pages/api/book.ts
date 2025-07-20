@@ -82,9 +82,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const startOfDay = userDateTime.startOf('day').toUTC().toISO();
       const endOfDay = userDateTime.endOf('day').toUTC().toISO();
 
-      // Call your availability logic or endpoint
+      // Call availability logic or endpoint
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/calendar/availability?start=${startOfDay}&end=${endOfDay}&bookingId=${bookingId || ''}`
+        `${req.headers.origin}/api/calendar/availability?start=${startOfDay}&end=${endOfDay}&bookingId=${bookingId || ''}`
       );
       const availabilityData = await response.json();
       const availableSlots: string[] = availabilityData.availableSlots || [];
