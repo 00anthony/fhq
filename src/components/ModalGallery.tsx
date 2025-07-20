@@ -81,7 +81,7 @@ export default function ModalGallery({
               />
             )}
 
-            {/* CTA Section */}
+            {/* CTA Button */}
             {media[selectedIdx].barber && (
               <button
                 onClick={() => setShowBooking(true)}

@@ -20,23 +20,37 @@ const Hero = () => {
   useEffect(() => {
     const isWide = window.innerWidth > 768;
 
-    if (typeof navigator !== 'undefined') {
-      const nav = navigator as Navigator & {
-        connection?: NetworkInformation;
-        webkitConnection?: NetworkInformation;
-      };
+    const nav = navigator as Navigator & {
+      connection?: NetworkInformation;
+    };
 
-      const connection = nav.connection || nav.webkitConnection;
-      const isSaveData = connection?.saveData === true;
+    const connection = nav.connection;
+    const isSaveData = connection?.saveData === true;
 
-      if (isWide || (!isWide && !isSaveData)) {
-        const timeout = setTimeout(() => {
-          setShouldLoadVideo(true);
-        }, 500);
-        return () => clearTimeout(timeout);
+    if (isWide || (!isWide && !isSaveData)) {
+      // Test if autoplay is allowed
+      const testVideo = document.createElement("video");
+      testVideo.src = "/videos/Hero-Video.mp4";
+      testVideo.muted = true;
+      testVideo.playsInline = true;
+
+      const playPromise = testVideo.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            testVideo.pause(); // Clean up
+            setShouldLoadVideo(true);
+          })
+          .catch(() => {
+            // Autoplay blocked, fallback to image
+            setShouldLoadVideo(false);
+          });
+      } else {
+        setShouldLoadVideo(true); // Autoplay allowed
       }
     }
   }, []);
+
 
   const handleVideoLoad = (): void => {
     setIsVideoLoaded(true);
