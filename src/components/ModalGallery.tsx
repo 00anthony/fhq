@@ -83,12 +83,20 @@ export default function ModalGallery({
 
             {/* CTA Button */}
             {media[selectedIdx].barber && (
-              <button
-                onClick={() => setShowBooking(true)}
-                className="block mx-auto my-4 bg-red-900/50 hover:bg-red-900 backdrop-blur-sm text-white px-4 py-2 rounded-xl transition cursor-pointer"
+              <div
+                className="w-full text-center mt-4"
+                onClick={onClose} // Clicking anywhere in this div closes modal
               >
-                Book {media[selectedIdx].barber}
-              </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent close on button click
+                    setShowBooking(true);
+                  }}
+                  className="inline-block bg-red-900/50 hover:bg-red-900 backdrop-blur-sm text-white px-4 py-2 rounded-xl transition cursor-pointer"
+                >
+                  Book {media[selectedIdx].barber}
+                </button>
+              </div>
             )}
 
 

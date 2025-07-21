@@ -42,9 +42,10 @@ export default function GalleryGrid({ items, barbers }: GalleryGridProps) {
     )
 
   return (
-    <section className="py-10 mt-20 bg-gray-900 text-white min-h-screen">
-      <div className="max-w-6xl mx-auto px-4">
-        <h1 className="text-4xl mb-8 text-center">Gallery</h1>
+    <section className="py-20 bg-neutral-950 text-white min-h-screen">
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <h1 className="text-4xl text-center">Gallery</h1>
+        <div className="my-4 pb-4 mx-auto w-32 border-t-4 border-white"></div>
 
         {/* Filters */}
         <div className="flex flex-wrap justify-center gap-4 mb-6">
@@ -68,7 +69,7 @@ export default function GalleryGrid({ items, barbers }: GalleryGridProps) {
           <select
             value={hairStyle}
             onChange={e => setHairStyle(e.target.value)}
-            className="bg-gray-800 text-white p-2 rounded border border-gray-600"
+            className="bg-neutral-900 text-white p-2 rounded border border-neutral-800"
           >
             <option value="">All Hair Styles</option>
             <option value="Fade">Fade</option>
@@ -79,7 +80,7 @@ export default function GalleryGrid({ items, barbers }: GalleryGridProps) {
           <select
             value={beardStyle}
             onChange={e => setBeardStyle(e.target.value)}
-            className="bg-gray-800 text-white p-2 rounded border border-gray-600"
+            className="bg-neutral-900 text-white p-2 rounded border border-neutral-800"
           >
             <option value="">All Beard Styles</option>
             <option value="Full Beard">Full Beard</option>
@@ -90,7 +91,7 @@ export default function GalleryGrid({ items, barbers }: GalleryGridProps) {
           <select
             value={equipment}
             onChange={e => setEquipment(e.target.value)}
-            className="bg-gray-800 text-white p-2 rounded border border-gray-600"
+            className="bg-neutral-900 text-white p-2 rounded border border-neutral-800"
           >
             <option value="">All Equipment</option>
             <option value="Razor">Razor</option>
@@ -132,7 +133,7 @@ export default function GalleryGrid({ items, barbers }: GalleryGridProps) {
                 />
               )}
 
-              <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+              <div className="absolute inset-0 bg-black/90 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
                 <div className="text-center">
                   <h2 className="text-xl">{item.style}</h2>
                   <p className="mt-1 text-sm">{item.barber}</p>

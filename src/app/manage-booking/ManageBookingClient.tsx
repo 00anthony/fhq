@@ -107,7 +107,7 @@ export default function ManageBookingClient() {
   if (error) return <p className="p-4 text-red-600">{error}</p>
 
   return (
-    <div className="max-w-md mx-auto p-4">
+    <div className="max-w-md mx-auto p-4 pt-20">
       <h1 className="text-2xl font-semibold mb-4">Manage Booking</h1>
 
       {!booking && actionStatus ? (

@@ -22,7 +22,7 @@ const NavLinks = ({ closeMenu }: NavLinksProps) => {
       </Link>
       <Link
         className="px-4 py-2 font-extrabold text-white hover:text-red-900 flex items-center"
-        href="/#booking"
+        href="/services"
         onClick={() => closeMenu?.()}
       >
         Services
@@ -81,31 +81,23 @@ const NavLinks = ({ closeMenu }: NavLinksProps) => {
         aria-label={session ? 'Sign Out' : 'Sign In with Google'}
       >
         {session ? (
-          // Google "G" logo
+          // filled profile icon
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="w-6 h-6 text-gray-800"
-            viewBox="0 0 48 48"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="w-6 h-6"
           >
-            <path
-              fill="#EA4335"
-              d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.84-6.84C35.66 2.94 30.14 0 24 0 14.64 0 6.5 5.64 2.72 13.82l7.95 6.17C12.28 13.51 17.66 9.5 24 9.5z"
-            />
-            <path
-              fill="#4285F4"
-              d="M46.5 24c0-1.57-.14-3.08-.4-4.5H24v9h12.7c-.55 2.96-2.24 5.46-4.77 7.15l7.36 5.72C44.35 37.61 46.5 31.19 46.5 24z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M10.67 28.66c-.5-1.5-.78-3.1-.78-4.66s.28-3.16.78-4.66l-7.95-6.17C1.37 16.33 0 20.02 0 24c0 3.98 1.37 7.67 3.72 10.83l7.95-6.17z"
-            />
-            <path
-              fill="#34A853"
-              d="M24 48c6.14 0 11.66-2.03 15.55-5.52l-7.36-5.72c-2.06 1.39-4.7 2.21-8.19 2.21-6.34 0-11.72-4.01-13.33-9.49l-7.95 6.17C6.5 42.36 14.64 48 24 48z"
-            />
+            {/* Head */}
+            <circle cx="12" cy="8" r="4" />
+            
+            {/* Shoulders */}
+            <path d="M4 20c0-3 3.6-5.5 8-5.5s8 2.5 8 5.5v1H4v-1z" />
           </svg>
         ) : (
-          // Profile icon
+          // Profile icon outline
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
