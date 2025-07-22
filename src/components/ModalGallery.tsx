@@ -12,7 +12,7 @@ type MediaItem = {
   src: string;
   style?: string;
   barber?: string;
-  barberId?: string;
+  barberId?: string | number;
 };
 
 type ModalGalleryProps = {

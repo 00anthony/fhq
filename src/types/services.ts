@@ -4,17 +4,20 @@ export type BarberOption = {
   duration: string;
 };
 
-export type ServiceMedia = {
+export type Media = {
+  type: "image" | "video";
   src: string;
-  type: 'image' | 'video';
-  poster?: string; // Optional: useful for video thumbnails
+  poster?: string;   // Optional
+  barber?: string;   // Optional
+  barberId?: number; // Optional
+  style?: string;    // Optional
 };
 
 export type Service = {
   id: number;
   name: string;
-  category: string | string[];
   barbers: BarberOption[];
-  description: string;
-  media?: ServiceMedia[];
+  category?: string | string[];
+  description?: string;
+  media?: Media[];
 };

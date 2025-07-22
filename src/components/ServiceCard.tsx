@@ -2,10 +2,10 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import ExpandedServiceContent from "@/components/ExpandedServiceContent";
-import { BarberOption } from "@/types/services";
+import { BarberOption, Service } from "@/types/services";
 
 type ServiceCardProps = {
-  service: any;
+  service: Service;
   expanded: boolean;
   onToggle: () => void;
   onSelectMedia: (idx: number) => void;
