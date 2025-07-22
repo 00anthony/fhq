@@ -1,45 +1,54 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import Image from 'next/image'
-import Masonry from 'react-masonry-css'
-import { GalleryGridProps } from '@/types/gallery'
-import ModalGallery from '@/components/ModalGallery'
+import { useState } from 'react';
+import Image from 'next/image';
+import Masonry from 'react-masonry-css';
+import { GalleryGridProps } from '@/types/gallery';
+import ModalGallery from '@/components/ModalGallery';
+import BarberFilter from './BarberFilter';
+import MultiSelectDropdown from './MultiSelectDropdown';
 
 // Masonry breakpoints
 const breakpointColumnsObj = {
-  default: 3,  // Desktop
-  1024: 2,     // Tablet
-  640: 1       // Mobile
-}
+  default: 3, // Desktop
+  1024: 2, // Tablet
+  640: 1, // Mobile
+};
 
 export default function GalleryGrid({ items, barbers }: GalleryGridProps) {
-  const [barberFilter, setBarberFilter] = useState('All')
-  const [hairStyle, setHairStyle] = useState('')
-  const [beardStyle, setBeardStyle] = useState('')
-  const [equipment, setEquipment] = useState('')
-  const [selectedIdx, setSelectedIdx] = useState<number | null>(null)
+  const [barberFilter, setBarberFilter] = useState('All');
+  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
 
-  const filtered = items.filter(item => {
-    const matchBarber = barberFilter === 'All' || item.barber === barberFilter
-    const matchHair =
-      !hairStyle || (item.hairStyle && item.hairStyle.includes(hairStyle))
-    const matchBeard = !beardStyle || item.beardStyle === beardStyle
-    const matchEquip =
-      !equipment || (item.equipment && item.equipment.includes(equipment))
-    return matchBarber && matchHair && matchBeard && matchEquip
-  })
+  const groupedOptions = [
+    { label: 'Hair Styles', options: ['Fade', 'Pompadour', 'Buzz Cut'] },
+    { label: 'Beard Styles', options: ['Full Beard', 'Goatee', 'Stubble'] },
+    { label: 'Equipment', options: ['Razor', 'Scissors', 'Clippers'] },
+  ];
 
-  const openModal = (index: number) => setSelectedIdx(index)
-  const closeModal = () => setSelectedIdx(null)
+  // Filtering items by barber AND selectedFilters
+  const filteredItems = items.filter(item => {
+    if (barberFilter !== 'All' && item.barber !== barberFilter) return false;
+
+    if (selectedFilters.length === 0) return true;
+
+    const matchesHair = selectedFilters.some(filter => item.hairStyle?.includes(filter) ?? false);
+    const matchesBeard = selectedFilters.some(filter => item.beardStyle?.includes(filter) ?? false);
+    const matchesEquipment = selectedFilters.some(filter => item.equipment?.includes(filter) ?? false);
+
+    return matchesHair || matchesBeard || matchesEquipment;
+  });
+
+
+  // Modal navigation helpers
+  const openModal = (index: number) => setSelectedIdx(index);
+  const closeModal = () => setSelectedIdx(null);
   const showPrev = () =>
-    setSelectedIdx(prev =>
-      prev !== null ? (prev - 1 + filtered.length) % filtered.length : null
-    )
+    setSelectedIdx((prev) =>
+      prev !== null ? (prev - 1 + filteredItems.length) % filteredItems.length : null,
+    );
   const showNext = () =>
-    setSelectedIdx(prev =>
-      prev !== null ? (prev + 1) % filtered.length : null
-    )
+    setSelectedIdx((prev) => (prev !== null ? (prev + 1) % filteredItems.length : null));
 
   return (
     <section className="py-20 bg-neutral-950 text-white min-h-screen">
@@ -47,57 +56,22 @@ export default function GalleryGrid({ items, barbers }: GalleryGridProps) {
         <h1 className="text-4xl text-center">Gallery</h1>
         <div className="my-4 pb-4 mx-auto w-32 border-t-4 border-white"></div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap justify-center gap-4 mb-6">
-          {['All', ...barbers].map(name => (
-            <button
-              key={name}
-              className={`px-4 py-2 rounded-2xl border-2 ${
-                barberFilter === name
-                  ? 'bg-white text-black'
-                  : 'border-gray-500 hover:bg-gray-700'
-              } transition`}
-              onClick={() => setBarberFilter(name)}
-            >
-              {name}
-            </button>
-          ))}
-        </div>
+        {/* Filters Container */}
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-10">
+          {/* Barber Filter - Left */}
+          <BarberFilter
+            barbers={['All', ...barbers]}
+            selectedBarber={barberFilter}
+            onSelect={setBarberFilter}
+          />
 
-        {/* Dropdown filters */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <select
-            value={hairStyle}
-            onChange={e => setHairStyle(e.target.value)}
-            className="bg-neutral-900 text-white p-2 rounded border border-neutral-800"
-          >
-            <option value="">All Hair Styles</option>
-            <option value="Fade">Fade</option>
-            <option value="Pompadour">Pompadour</option>
-            <option value="Buzz Cut">Buzz Cut</option>
-          </select>
-
-          <select
-            value={beardStyle}
-            onChange={e => setBeardStyle(e.target.value)}
-            className="bg-neutral-900 text-white p-2 rounded border border-neutral-800"
-          >
-            <option value="">All Beard Styles</option>
-            <option value="Full Beard">Full Beard</option>
-            <option value="Goatee">Goatee</option>
-            <option value="Stubble">Stubble</option>
-          </select>
-
-          <select
-            value={equipment}
-            onChange={e => setEquipment(e.target.value)}
-            className="bg-neutral-900 text-white p-2 rounded border border-neutral-800"
-          >
-            <option value="">All Equipment</option>
-            <option value="Razor">Razor</option>
-            <option value="Scissors">Scissors</option>
-            <option value="Clippers">Clippers</option>
-          </select>
+          {/* Dropdown Filters - Right */}
+          <MultiSelectDropdown
+            groupedOptions={groupedOptions}
+            selectedOptions={selectedFilters}
+            onChange={setSelectedFilters}
+            label="Filter Styles & Equipment"
+          />
         </div>
 
         {/* Masonry layout */}
@@ -106,7 +80,7 @@ export default function GalleryGrid({ items, barbers }: GalleryGridProps) {
           className="my-masonry-grid"
           columnClassName="my-masonry-grid_column"
         >
-          {filtered.map((item, index) => (
+          {filteredItems.map((item, index) => (
             <div
               key={item.id}
               onClick={() => openModal(index)}
@@ -118,7 +92,6 @@ export default function GalleryGrid({ items, barbers }: GalleryGridProps) {
                   poster={item.poster}
                   className="w-full h-auto object-cover rounded-xl"
                   muted
-                  
                   loop
                   playsInline
                   preload="metadata"
@@ -147,7 +120,7 @@ export default function GalleryGrid({ items, barbers }: GalleryGridProps) {
       {/* Modal */}
       {selectedIdx !== null && (
         <ModalGallery
-          media={filtered.map(item => ({
+          media={filteredItems.map((item) => ({
             type: item.type,
             src: item.src,
             barber: item.barber,
@@ -161,5 +134,5 @@ export default function GalleryGrid({ items, barbers }: GalleryGridProps) {
         />
       )}
     </section>
-  )
+  );
 }

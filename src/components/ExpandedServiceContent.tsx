@@ -33,10 +33,10 @@ export default function ExpandedServiceContent({
         transition={{ delay: 0.2, duration: 0.3 }}
         className="pt-4"
       >
-        <p className="text-sm text-gray-700">{service.description}</p>
+        <p className="text-sm text-gray-400">{service.description}</p>
         <ul className="mt-3 text-sm text-gray-600">
           {service.barbers.map((b, index) => (
-            <li key={index} className="flex justify-between">
+            <li key={index} className="flex justify-between pb-4">
               <span>{b.name}</span>
               <span>{`$${b.price} • ${b.duration}`}</span>
             </li>
