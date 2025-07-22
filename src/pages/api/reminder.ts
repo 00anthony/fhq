@@ -36,14 +36,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Send emails
     for (const booking of upcomingBookings) {
-      console.log(`[REMINDER] Sending reminder to ${booking.email} for appointment at ${booking.datetime}`);
+      // Format the appointment date and time in a readable way
+      const appointmentDate = new Date(booking.datetime);
+      const formattedDateTime = appointmentDate.toLocaleString('en-US', {
+        weekday: 'long',  // e.g., "Monday"
+        month: 'long',    // e.g., "July"
+        day: 'numeric',   // e.g., "21"
+        hour: 'numeric',  // e.g., "1 PM"
+        minute: '2-digit',// e.g., "30"
+        hour12: true      // Use AM/PM format
+      });
+
+      console.log(`[REMINDER] Sending reminder to ${booking.email} for appointment at ${formattedDateTime}`);
+
       await resend.emails.send({
         from: 'Barbershop <onboarding@resend.dev>',
         to: booking.email,
         subject: 'Appointment Reminder',
         html: `<p>Hello ${booking.name},</p>
-               <p>This is a reminder that your appointment is in 30 minutes.</p>
-               <p>See you soon!</p>`,
+              <p>This is a reminder that you have an appointment scheduled for <strong>${formattedDateTime}</strong>.</p>
+              <p>See you soon!</p>`,
       });
 
       // Update booking to mark reminder as sent
@@ -51,8 +63,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         where: { id: booking.id },
         data: { reminderSent: true },
       });
+
       console.log(`[REMINDER] Marked reminderSent = true for booking ID ${booking.id}`);
     }
+
 
     console.log('[REMINDER] Reminder process complete');
     res.status(200).json({ message: `Sent ${upcomingBookings.length} reminders.` });

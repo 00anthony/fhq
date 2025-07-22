@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { FaInstagram, FaTiktok } from 'react-icons/fa';
 import { LazyMotion, domAnimation, m } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import { memo } from 'react'; //memoised card so array(barber.ts) must be static
 import type { WorkMedia } from '../data/barbers'; 
+import ThumbnailCarousel from "@/components/ThumbnailCarousel";
 
 
 type BarberCardProps = {
@@ -33,7 +34,6 @@ const BarberCard = ({
   bookLink = '#',
 }: BarberCardProps) => {
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
-  const thumbStripRef = useRef<HTMLDivElement>(null);
 
   const showPrev = () =>
     setSelectedIdx((i) => (i !== null ? (i > 0 ? i - 1 : workPics.length - 1) : 0));
@@ -73,59 +73,10 @@ const BarberCard = ({
         {/* ------------ Thumbnail Strip with Arrows ------------ */}
 
         <div className="absolute bottom-0 w-full px-4 pb-4 pt-24 bg-gradient-to-t from-white/70 flex flex-col items-center group/thumbs">
-          {/* Scroll buttons (fixed in place) */}
-          <button
-            onClick={() =>
-              thumbStripRef.current && (thumbStripRef.current.scrollLeft -= 150)
-            }
-            className="hidden group-hover/thumbs:block absolute left-0 top-1/2 -translate-y-1/2 z-10 text-white bg-black/60 px-2 py-1 rounded-md hover:bg-black/80"
-          >
-            <span className="relative -top-0.5 text-xl leading-none">‹</span>
-          </button>
-
-          <button
-            onClick={() =>
-              thumbStripRef.current && (thumbStripRef.current.scrollLeft += 150)
-            }
-            className="hidden group-hover/thumbs:block absolute right-0 top-1/2 -translate-y-1/2 z-10 text-white bg-black/60 px-2 py-1 rounded-md hover:bg-black/80"
-          >
-            <span className="relative -top-0.5 text-xl leading-none">›</span>
-          </button>
-          {/* Scrollable thumbnails */}
-          <div
-            ref={thumbStripRef}
-            className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth gap-2 mb-4 w-full scrollbar-hide"
-            tabIndex={0}
-            role="group"
-          >
-            {workPics.map((media, idx) =>
-              media.type === 'video' ? (
-                <video
-                  key={idx}
-                  src={media.src}
-                  poster={media.poster}
-                  aria-label={`Video work ${idx + 1} by ${name}`}
-                  playsInline
-                  muted
-                  preload="metadata"
-                  onClick={() => setSelectedIdx(idx)}
-                  className="h-20 w-28 flex-shrink-0 rounded-lg object-cover cursor-pointer snap-start"
-                />
-              ) : (
-                <Image
-                  key={idx}
-                  src={media.src}
-                  alt={`work ${idx + 1}`}
-                  width={112}
-                  height={80}
-                  loading="lazy"
-                  onClick={() => setSelectedIdx(idx)}
-                  className="h-20 w-28 flex-shrink-0 rounded-lg object-cover cursor-pointer snap-start"
-                />
-              )
-            )}
-          </div>
-
+          <ThumbnailCarousel
+            media={workPics}
+            onSelect={(idx) => setSelectedIdx(idx)}
+          />
 
           <div className="flex gap-4 text-2xl mb-4">
             <a href={instagram} target="_blank" rel="noopener noreferrer" className="text-pink-600 hover:text-pink-700">
