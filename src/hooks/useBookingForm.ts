@@ -4,11 +4,14 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
   const [selectedBarber, setSelectedBarber] = useState(initialBarber)
   const [selectedService, setSelectedService] = useState('')
   const [selectedDateTime, setSelectedDateTime] = useState<Date | null>(null)
-  const [availableTimes, setAvailableTimes] = useState<string[]>([])
+  const [availableTimes, setAvailableTimes] = useState<{ time: string; barbers: string[] }[]>([])
   const [loading, setLoading] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [fileError, setFileError] = useState<string | null>(null)
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', comments: '' })
+  const [availableBarbersForSelectedTime, setAvailableBarbersForSelectedTime] = useState<string[]>([])
+  const [selectedBarberForTime, setSelectedBarberForTime] = useState<string>(initialBarber || '')
+
 
   const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
   const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif']
@@ -35,23 +38,70 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
     }
   }
 
-  // Fetch available times
+  // Fetch availability whenever date, barber or bookingId changes
   useEffect(() => {
-    if (!selectedDateTime) return setAvailableTimes([])
+    if (!selectedDateTime) {
+      setAvailableTimes([])
+      return
+    }
+
     const dateStr = selectedDateTime.toISOString().split('T')[0]
     const startOfDay = new Date(dateStr)
     const endOfDay = new Date(dateStr)
     endOfDay.setHours(23, 59, 59, 999)
+
     const params = new URLSearchParams({
       start: startOfDay.toISOString(),
       end: endOfDay.toISOString(),
+      barber: selectedBarber.toLowerCase() === 'any barber' ? 'any' : selectedBarber,
     })
+
     if (bookingId) params.append('bookingId', bookingId)
-    fetch(`/api/calendar/availability?${params}`)
+
+    fetch(`/api/calendar/availability?${params.toString()}`)
       .then(res => res.json())
-      .then(data => setAvailableTimes(data.availableSlots || []))
+      .then(data => {
+        if (selectedBarber && selectedBarber.toLowerCase() !== 'any barber') {
+          const slots = (data.availableSlots || []).map((slot: string) => ({
+            time: slot,
+            barbers: [selectedBarber],
+          }))
+          setAvailableTimes(slots)
+        } else {
+          const slots = (data.availableSlots || []).map(
+            (item: { slot: string; barbers: string[] }) => ({
+              time: item.slot,
+              barbers: item.barbers,
+            })
+          )
+          setAvailableTimes(slots)
+        }
+      })
       .catch(() => setAvailableTimes([]))
-  }, [selectedDateTime, bookingId])
+  }, [selectedDateTime, selectedBarber, bookingId])
+
+  // Update available barbers for selected time whenever availableTimes or selectedDateTime changes
+  useEffect(() => {
+    if (!selectedDateTime || !availableTimes.length) {
+      setAvailableBarbersForSelectedTime([])
+      setSelectedBarberForTime('')
+      return
+    }
+
+    const selectedISO = selectedDateTime.toISOString()
+    const slot = availableTimes.find(slot => slot.time === selectedISO)
+
+    if (slot && slot.barbers.length) {
+      setAvailableBarbersForSelectedTime(slot.barbers)
+      setSelectedBarberForTime(slot.barbers[0])
+    } else {
+      setAvailableBarbersForSelectedTime([])
+      setSelectedBarberForTime('')
+    }
+  }, [selectedDateTime, availableTimes])
+
+
+
 
   // handle submit
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,7 +118,7 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
     formDataToSend.append('comments', formData.comments)
     formDataToSend.append('datetime', selectedDateTime.toISOString())
     formDataToSend.append('service', selectedService)
-    formDataToSend.append('barber', selectedBarber)
+    formDataToSend.append('barber', selectedBarberForTime)
     formDataToSend.append('timeZone', Intl.DateTimeFormat().resolvedOptions().timeZone)
     if (file) formDataToSend.append('upload', file)
 
@@ -92,6 +142,8 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
     selectedDateTime, setSelectedDateTime,
     availableTimes,
     fileError, handleFileChange,
-    handleSubmit, loading,
+    loading, handleSubmit,
+    availableBarbersForSelectedTime,
+    selectedBarberForTime, setSelectedBarberForTime,
   }
 }

@@ -1,108 +1,108 @@
-import { NextResponse } from 'next/server';
-import { getBusyTimes } from '@/lib/google-calendar';
-import { PrismaClient } from '@prisma/client';
-import { DateTime } from 'luxon';
+import { NextRequest, NextResponse } from 'next/server'
+import { getBusyTimes } from '@/lib/google-calendar'
 
 
-const prisma = new PrismaClient();
-
-const BARBER_TIMEZONE = 'America/Chicago';
-const START_HOUR = 9;
-const END_HOUR = 17;
-const SLOT_DURATION_MINUTES = 30;
-
-function generateTimeSlotsForDay(date: Date): string[] {
-  const slots: string[] = [];
-
-  // Start at the given date in the barber's timezone at 9 AM
-  let current = DateTime.fromJSDate(date, { zone: BARBER_TIMEZONE })
-    .set({ hour: START_HOUR, minute: 0, second: 0, millisecond: 0 });
-
-  const end = current.set({ hour: END_HOUR, minute: 0 });
-
-  while (current < end) {
-    // Convert local barber time to UTC and store as ISO string
-    const iso = current.toUTC().toISO();
-    if (iso) slots.push(iso);
-    current = current.plus({ minutes: SLOT_DURATION_MINUTES });
-  }
-
-  return slots;
-}
-
-function isSlotAvailable(slot: string, busyTimes: { start: string; end: string }[]): boolean {
-  const slotStart = new Date(slot).getTime();
-  const slotEnd = slotStart + SLOT_DURATION_MINUTES * 60 * 1000;
-
-  return !busyTimes.some(({ start, end }) => {
-    const busyStart = new Date(start).getTime();
-    const busyEnd = new Date(end).getTime();
-    return slotStart < busyEnd && slotEnd > busyStart;
-  });
-}
-
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const start = searchParams.get('start');
-  const end = searchParams.get('end');
-  const bookingId = searchParams.get('bookingId'); // optional
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url)
+  const start = searchParams.get('start')
+  const end = searchParams.get('end')
+  const bookingId = searchParams.get('bookingId') ?? null
+  const barberCalendars: Record<string, string> = {
+      Jay: 'anthonytij3@gmail.com',
+      Luis: 'luisbarber@gmail.com',
+      Los: 'losbarber@gmail.com',
+    };
 
   if (!start || !end) {
-    return NextResponse.json({ error: 'Missing start or end query parameters' }, { status: 400 });
+    return NextResponse.json({ error: 'Missing start or end' }, { status: 400 })
   }
 
-  const startDate = new Date(start);
-  const endDate = new Date(end);
+  // Define working hours and slot duration
+  const workingHours = { startHour: 9, endHour: 18 }
+  const slotDurationMinutes = 30
 
-  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-    return NextResponse.json({ error: 'Invalid date format' }, { status: 400 });
+  // Prepare a map of all barbers' available slots
+  const slotMap: Record<string, Set<string>> = {}
+  const allSlotsSet = new Set<string>()
+
+  function generateAvailableSlots(
+    start: string,
+    end: string,
+    busy: { start: string; end: string }[],
+    workingHours: { startHour: number; endHour: number },
+    slotDurationMinutes: number
+  ): string[] {
+    const slots: string[] = []
+
+    const startDate = new Date(start)
+    const endDate = new Date(end)
+
+    for (
+      let day = new Date(startDate);
+      day <= endDate;
+      day.setDate(day.getDate() + 1)
+    ) {
+      for (
+        let hour = workingHours.startHour;
+        hour < workingHours.endHour;
+        hour++
+      ) {
+        for (
+          let minute = 0;
+          minute < 60;
+          minute += slotDurationMinutes
+        ) {
+          const slot = new Date(day)
+          slot.setHours(hour, minute, 0, 0)
+          const slotStart = slot.getTime()
+          const slotEnd = slotStart + slotDurationMinutes * 60 * 1000
+
+          const isBusy = busy.some(({ start, end }) => {
+            const busyStart = new Date(start).getTime()
+            const busyEnd = new Date(end).getTime()
+            return slotStart < busyEnd && slotEnd > busyStart
+          })
+
+          if (!isBusy) {
+            slots.push(new Date(slotStart).toISOString())
+          }
+        }
+      }
+    }
+
+    return slots
   }
 
-  const now = new Date();
-  const twoWeeksFromNow = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
 
-  // Validation: start and end must be >= now and <= twoWeeksFromNow
-  if (startDate < now) {
-    return NextResponse.json({ error: 'Start date cannot be in the past' }, { status: 400 });
-  }
-  if (endDate > twoWeeksFromNow) {
-    return NextResponse.json({ error: 'End date cannot be more than 2 weeks from now' }, { status: 400 });
-  }
+  for (const [barber, calendarId] of Object.entries(barberCalendars)) {
+    if (!calendarId) continue
 
-  let busy = await getBusyTimes(start, end);
+    try {
+      const busyRaw = await getBusyTimes(start, end, calendarId)
+      const busy = busyRaw
+        .filter(
+          (p): p is { start: string; end: string } =>
+            typeof p.start === 'string' && typeof p.end === 'string'
+        )
+        .map(p => ({ start: p.start, end: p.end }))
 
-  if (bookingId) {
-    const booking = await prisma.booking.findUnique({
-      where: { id: bookingId },
-    });
+        const available = generateAvailableSlots(start, end, busy, workingHours, slotDurationMinutes)
 
-    if (booking) {
-      busy = busy.filter(period => {
-        const bookingStart = booking.datetime.toISOString();
-        const bookingEnd = new Date(booking.datetime.getTime() + SLOT_DURATION_MINUTES * 60 * 1000).toISOString();
-        return !(period.start === bookingStart && period.end === bookingEnd);
-      });
+      available.forEach((slot: string) => {
+        if (!slotMap[slot]) slotMap[slot] = new Set()
+        slotMap[slot].add(barber)
+        allSlotsSet.add(slot)
+      })
+    } catch (error) {
+      console.error(`Failed to get availability for ${barber}:`, error)
     }
   }
 
-  const busyTimes = busy.filter(
-    (period): period is { start: string; end: string } =>
-      typeof period.start === 'string' && typeof period.end === 'string'
-  );
+  // Convert final result to array format
+  const availableSlots = Array.from(allSlotsSet).sort().map(slot => ({
+    slot,
+    barbers: Array.from(slotMap[slot])
+  }))
 
-  const availableSlots: string[] = [];
-
-  for (
-    let d = new Date(startDate);
-    d <= endDate;
-    d.setDate(d.getDate() + 1)
-  ) {
-    const day = new Date(d);
-    const slots = generateTimeSlotsForDay(day);
-    const freeSlots = slots.filter(slot => isSlotAvailable(slot, busyTimes));
-    availableSlots.push(...freeSlots);
-  }
-
-  return NextResponse.json({ availableSlots });
+  return NextResponse.json({ availableSlots })
 }
-

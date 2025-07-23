@@ -6,8 +6,9 @@ import { ServiceSelect } from './ServiceSelect'
 import { DateTimePickerField } from './DateTimePickerField'
 import { FileUpload } from './FileUpload'
 import { ContactFields } from './ContactFields'
+import { BarberTimeSelect } from './BarberTimeSelect'
 
-const barbers = ['Jay', 'Luis', 'Los']
+const barbers = ['Any Barber', 'Jay', 'Luis', 'Los']
 const services = ['Haircut', 'Beard Trim', 'Fade + Line-Up', 'Full Service']
 
 type BookingFormProps = {
@@ -31,6 +32,9 @@ export function BookingForm({ barberName = '', bookingId, onSuccess }: BookingFo
     handleFileChange,
     handleSubmit,
     loading,
+    availableBarbersForSelectedTime,
+    selectedBarberForTime,
+    setSelectedBarberForTime,
   } = useBookingForm(barberName, bookingId)
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -54,6 +58,14 @@ export function BookingForm({ barberName = '', bookingId, onSuccess }: BookingFo
         onChange={setSelectedDateTime}
         availableTimes={availableTimes}
       />
+
+      {availableBarbersForSelectedTime.length > 0 && (
+        <BarberTimeSelect
+          availableBarbers={availableBarbersForSelectedTime}
+          selectedBarber={selectedBarberForTime}
+          onChange={setSelectedBarberForTime}
+        />
+      )}
 
       <FileUpload onChange={handleFileChange} error={fileError} />
 

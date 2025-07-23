@@ -1,17 +1,17 @@
-import { google } from 'googleapis'
-import auth from '@/lib/google-auth'
+import { google } from 'googleapis';
+import auth from '@/lib/google-auth';
 
-const calendar = google.calendar({ version: 'v3', auth })
+const calendar = google.calendar({ version: 'v3', auth });
 
-export async function getBusyTimes(start: string, end: string) {
+export async function getBusyTimes(start: string, end: string, calendarId: string = 'primary') {
   const res = await calendar.freebusy.query({
     requestBody: {
       timeMin: start,
       timeMax: end,
       timeZone: 'America/Chicago',
-      items: [{ id: 'primary' }],
+      items: [{ id: calendarId }],
     },
-  })
+  });
 
-  return res.data.calendars?.primary?.busy ?? []
+  return res.data.calendars?.[calendarId]?.busy ?? [];
 }
