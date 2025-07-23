@@ -44,7 +44,7 @@ const NavLinks = ({ closeMenu }: NavLinksProps) => {
       </Link>
       <Link
         className="font-bold text-white bg-red-900/50 backdrop-blur-sm inline-flex items-center justify-center w-auto px-6 py-3 shadow-xl rounded-xl transition-all duration-300 hover:bg-red-900"
-        href="/#booking"
+        href="/booking"
         onClick={() => closeMenu?.()}
       >
         Get Faded
