@@ -1,6 +1,6 @@
 export type BarberOption = {
   name: string;
-  price: number;
+  price: number | "FREE";
   duration: string;
 };
 

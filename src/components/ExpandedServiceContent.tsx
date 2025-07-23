@@ -15,6 +15,8 @@ export default function ExpandedServiceContent({
   onSelectMedia,
 }: ExpandedServiceContentProps) {
   const [contentRef, contentHeight] = useMeasure<HTMLDivElement>();
+  const formatPrice = (price: number | "FREE") =>
+  typeof price === "number" ? `$${price}` : price;
 
   return (
     <motion.div
@@ -38,7 +40,7 @@ export default function ExpandedServiceContent({
           {service.barbers.map((b, index) => (
             <li key={index} className="flex justify-between pb-4">
               <span>{b.name}</span>
-              <span>{`$${b.price} • ${b.duration}`}</span>
+              <span>{`${formatPrice(b.price)} • ${b.duration}`}</span>
             </li>
           ))}
         </ul>

@@ -11,17 +11,33 @@ type ServiceCardProps = {
   onSelectMedia: (idx: number) => void;
 };
 
+const getRange = (values: (string | number)[], { prefix = "", suffix = "" } = {}) => {
+  const numericValues = values.map((v) =>
+    typeof v === "string" ? parseInt(v) : v
+  );
+
+  // Check if all values are 0 or invalid
+  if (numericValues.every((v) => v === 0)) return "FREE";
+
+  const min = Math.min(...numericValues);
+  const max = Math.max(...numericValues);
+
+  return min === max
+    ? `${prefix}${min}${suffix}`
+    : `${prefix}${min}${suffix} - ${prefix}${max}${suffix}`;
+};
+
 const getPriceRange = (barbers: BarberOption[]) => {
-  if (barbers.length === 1) return `$${barbers[0].price}`;
   const prices = barbers.map((b) => b.price);
-  return `$${Math.min(...prices)} - $${Math.max(...prices)}`;
+  return getRange(prices, { prefix: "$" });
 };
 
 const getDurationRange = (barbers: BarberOption[]) => {
-  if (barbers.length === 1) return barbers[0].duration;
-  const minutes = barbers.map((b) => parseInt(b.duration));
-  return `${Math.min(...minutes)} - ${Math.max(...minutes)} min`;
+  const durations = barbers.map((b) => b.duration);
+  return getRange(durations, { suffix: " min" });
 };
+
+
 
 export default function ServiceCard({
   service,

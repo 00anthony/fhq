@@ -58,7 +58,7 @@ export const servicesData: Service[] = [
     category: ["Hair", "Style & Care"], 
     barbers: [
       { name: "Luis", price: 45, duration: "50 min" },
-      { name: "Jay", price: 50, duration: "45 min" }
+      { name: "Jay", price: 50, duration: "50 min" }
     ], 
     description: "Our Haircut & Design Are Carefully Customized Based On Your Desired Style. Our Professional Barbers Are Carefully Crafting The Design To Your Liking After Your Desired Haircut. Hot Towels Included.",
      media: [
@@ -89,8 +89,8 @@ export const servicesData: Service[] = [
     name: "consultation", 
     category: ["Style & Care", "Hair", "Beard", "Combo"], 
     barbers: [
-      { name: "Luis", price: 50, duration: "50 min" },
-      { name: "Jay", price: 45, duration: "45 min" }
+      { name: "Luis", price: 0, duration: "30 min" },
+      { name: "Jay", price: 0, duration: "45 min" }
     ], 
     description: "Book an online or in person consultation to unlock that untapped potential",
      media: [
