@@ -93,8 +93,8 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
       return
     }
 
-    const selectedISO = selectedDateTime.toISOString()
-    const slot = availableTimes.find(slot => slot.time === selectedISO)
+    const slot = availableTimes.find(slot => new Date(slot.time).getTime() === selectedDateTime.getTime())
+
 
     if (slot && slot.barbers.length) {
       setAvailableBarbersForSelectedTime(slot.barbers)

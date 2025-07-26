@@ -1,7 +1,7 @@
 "use client";
 
-import BarberFilter from "./BarberFilter";
-import AnimatedDropdown from "./AnimatedDropdown";
+import BarberFilter from "../BarberFilter";
+import AnimatedDropdown from "../AnimatedDropdown";
 
 type ServicesFiltersProps = {
   selectedBarber: string;

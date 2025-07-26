@@ -4,7 +4,7 @@ import { LazyMotion, domAnimation, m, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import BookingModal from './BookingModal';
+import BookingModal from './Booking/BookingModal';
 
 // Unified media type
 type MediaItem = {

@@ -70,7 +70,7 @@ export function DateTimePickerField({
               : 'border-gray-300 text-neutral-300 hover:bg-neutral-900'
           }`}
         >
-          {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}
           <span className="block text-xs text-gray-400">
             {barbers.length === 1 ? barbers[0] : `${barbers.length} barbers`}
           </span>

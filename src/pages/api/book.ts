@@ -89,9 +89,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const availabilityData = await response.json();
       const availableSlots: string[] = availabilityData.availableSlots || [];
 
-      const isAvailable = availableSlots.some(slot => {
-        return DateTime.fromISO(slot).toUTC().toISO() === userDateTime.toUTC().toISO();
-      });
+      const isAvailable = availableSlots.some(slot =>
+        DateTime.fromISO(slot).toUTC().hasSame(userDateTime.toUTC(), 'minute')
+      );
+      console.log('🔍 Available slots:', availableSlots)
+      console.log('⏰ Selected:', userDateTime.toUTC().toISO())
+
 
       if (!isAvailable) {
         return res.status(400).json({ error: 'Selected time is no longer available.' });

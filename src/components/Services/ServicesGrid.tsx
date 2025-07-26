@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { servicesData } from "@/data/services";
 import dynamic from "next/dynamic";
-import ServiceCard from "@/components/ServiceCard";
+import ServiceCard from "@/components/Services/ServiceCard";
 
 const ModalGallery = dynamic(() => import("@/components/ModalGallery"), {
   ssr: false,

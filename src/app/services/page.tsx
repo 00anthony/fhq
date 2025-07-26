@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
 import { allBarbers, categories } from "@/data/services";
-import ServicesFilters from "@/components/ServiceFilters";
-import ServicesGrid from "@/components/ServicesGrid"; 
+import ServicesFilters from "@/components/Services/ServiceFilters";
+import ServicesGrid from "@/components/Services/ServicesGrid"; 
 
 export default function ServicesPage() {
   const [selectedBarber, setSelectedBarber] = useState("Any Barber");
