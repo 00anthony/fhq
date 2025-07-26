@@ -17,7 +17,7 @@ export type Service = {
   id: number;
   name: string;
   barbers: BarberOption[];
-  category?: string | string[];
+  category?: string[];
   description?: string;
   media?: Media[];
 };

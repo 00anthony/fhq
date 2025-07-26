@@ -7,9 +7,10 @@ import { DateTimePickerField } from './DateTimePickerField'
 import { FileUpload } from './FileUpload'
 import { ContactFields } from './ContactFields'
 import { BarberTimeSelect } from './BarberTimeSelect'
+import { getBarberServiceMap } from "@/lib/utils/barberServiceMap";
+import { allBarbers } from '@/data/services';
 
-const barbers = ['Any Barber', 'Jay', 'Luis', 'Los']
-const services = ['Haircut', 'Beard Trim', 'Fade + Line-Up', 'Full Service']
+const services = ['Haircut', 'Beard Trim', 'Haircut & Design', 'Hair + Beard', 'Deluxe Haircut', 'Consultation']
 
 type BookingFormProps = {
   barberName?: string
@@ -42,16 +43,35 @@ export function BookingForm({ barberName = '', bookingId, onSuccess }: BookingFo
     if (onSuccess) onSuccess()
   }
 
+  const barberServices = getBarberServiceMap();
+
+  //filters services by barber
+  const availableServices =
+    selectedBarber && selectedBarber.toLowerCase() !== 'any'
+      ? barberServices[selectedBarber] || []
+      : services
+
   return (
     <form
       onSubmit={onSubmit}
       className="flex flex-col space-y-4 bg-neutral-800 p-6 rounded-xl shadow-md w-full max-w-md"
     >
-      <h2 className="text-2xl text-center text-neutral-100">Book Your Appointment</h2>
+      <h1 id="booking-form-title" className="text-2xl text-center text-neutral-100">Book Your Appointment</h1>
 
-      <BarberSelect selected={selectedBarber} onChange={setSelectedBarber} barbers={barbers} />
+      <BarberSelect
+        selected={selectedBarber}
+        onChange={setSelectedBarber}
+        barbers={allBarbers}
+        selectedService={selectedService}
+      />
 
-      <ServiceSelect selected={selectedService} onChange={setSelectedService} services={services} />
+      <ServiceSelect 
+        selected={selectedService} 
+        onChange={setSelectedService} 
+        services={availableServices} 
+        selectedBarber={selectedBarber}
+        disabled={availableServices.length === 0}
+      />
 
       <DateTimePickerField
         selected={selectedDateTime}
@@ -74,7 +94,9 @@ export function BookingForm({ barberName = '', bookingId, onSuccess }: BookingFo
       <button
         disabled={loading}
         type="submit"
-        className="bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition font-medium disabled:bg-red-400"
+        className={`bg-red-900 text-white py-2 rounded-lg hover:bg-red-700 transition font-medium disabled:bg-red-400 ${
+          loading ? 'cursor-not-allowed opacity-50' : ''
+        }`}
       >
         {loading ? 'Booking...' : 'Confirm Booking'}
       </button>

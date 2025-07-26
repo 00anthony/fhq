@@ -28,7 +28,7 @@ export default function ServicesGrid({
   // Filtered services
   const filteredServices = servicesData.filter((service) => {
     const barberMatch =
-      selectedBarber === "All" ||
+      selectedBarber === "Any Barber" ||
       service.barbers.some((barber) => barber.name === selectedBarber);
 
     const categoryMatch =
@@ -69,6 +69,7 @@ export default function ServicesGrid({
             <ServiceCard
               key={service.id}
               service={service}
+              selectedBarber={selectedBarber}
               expanded={expandedServiceId === service.id}
               onToggle={() =>
                 setExpandedServiceId(

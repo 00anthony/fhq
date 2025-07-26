@@ -1,14 +1,12 @@
 import { Service } from "@/types/services"
 
-export const barbers = ["All", "Jay", "Luis"];
-
 export const categories = ["All", "Hair", "Beard", "Style & Care", "Combo"];
 
 export const servicesData: Service[] = [
   { 
     id: 1, 
     name: "Haircut", 
-    category: "Hair", 
+    category: ["Hair"], 
     barbers: [
       { name: "Jay", price: 30, duration: "30 min" },
       { name: "Luis", price: 35, duration: "35 min" }
@@ -24,7 +22,7 @@ export const servicesData: Service[] = [
   { 
     id: 2, 
     name: "Beard Trim", 
-    category: "Beard", 
+    category: ["Beard"], 
     barbers: [
       { name: "Jay", price: 20, duration: "15 min" }
     ],
@@ -38,7 +36,7 @@ export const servicesData: Service[] = [
   },
   {
     id: 3,
-    name: "Hair + Beard Combo",
+    name: "Hair + Beard",
     category: ["Combo", "Hair", "Beard"],
     barbers: [
       { name: "Luis", price: 50, duration: "50 min" },
@@ -74,7 +72,6 @@ export const servicesData: Service[] = [
     category: ["Hair", "Style & Care"], 
     barbers: [
       { name: "Luis", price: 60, duration: "50 min" },
-      { name: "Jay", price: 55, duration: "45 min" }
     ],
     description: "Each Deluxe Haircut Is Customized For You Based On Head Shape, Texture, And Desired Style. Includes A Cleanser, Exfoliator, Moisturizer, Hot Towel Included.", 
      media: [
@@ -86,7 +83,7 @@ export const servicesData: Service[] = [
   },
   { 
     id: 6, 
-    name: "consultation", 
+    name: "Consultation", 
     category: ["Style & Care", "Hair", "Beard", "Combo"], 
     barbers: [
       { name: "Luis", price: 0, duration: "30 min" },
@@ -101,3 +98,14 @@ export const servicesData: Service[] = [
     ]
   },
 ];
+
+// Generate barber list (no duplicates)
+export const barberNames = Array.from(
+  new Set(servicesData.flatMap((service) => service.barbers.map((b) => b.name)))
+);
+
+// Prepend "Any Barber"
+export const allBarbers = ['Any Barber', ...barberNames];
+
+// Extract all service names
+export const allServices = servicesData.map((s) => s.name);

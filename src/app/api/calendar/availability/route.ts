@@ -1,20 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getBusyTimes } from '@/lib/google-calendar'
-
+import { servicesData } from '@/data/services'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const start = searchParams.get('start')
   const end = searchParams.get('end')
-  const bookingId = searchParams.get('bookingId') ?? null
+  //const bookingId = searchParams.get('bookingId') ?? null | will be used for rescheduling same day/time diff service later
+  const service = searchParams.get('service') || ''
+  const selectedBarber = searchParams.get('barber')
+
   const barberCalendars: Record<string, string> = {
-      Jay: 'anthonytij3@gmail.com',
-      Luis: 'luisbarber@gmail.com',
-      Los: 'losbarber@gmail.com',
-    };
+    Jay: 'anthonytij3@gmail.com',
+    Luis: 'luisbarber@gmail.com',
+    Los: 'losbarber@gmail.com',
+  };
 
   if (!start || !end) {
     return NextResponse.json({ error: 'Missing start or end' }, { status: 400 })
+  }
+  if (!service) {
+    return NextResponse.json({ availableSlots: [] })
+  }
+
+  // Step 1: Get all barbers who offer this service
+  let barbersToCheck = servicesData
+    .find(s => s.name === service)
+    ?.barbers.map(b => b.name)
+    .filter(name => barberCalendars[name]); // only include barbers with calendar ID
+
+  if (!barbersToCheck || barbersToCheck.length === 0) {
+    return NextResponse.json({ availableSlots: [] });
+  }
+
+  // Step 2: If a specific barber was selected, filter to just that one
+  if (selectedBarber && selectedBarber !== 'any') {
+    barbersToCheck = barbersToCheck.filter(b => b === selectedBarber);
   }
 
   // Define working hours and slot duration
@@ -74,7 +95,8 @@ export async function GET(req: NextRequest) {
   }
 
 
-  for (const [barber, calendarId] of Object.entries(barberCalendars)) {
+  for (const barber of barbersToCheck) {
+    const calendarId = barberCalendars[barber]
     if (!calendarId) continue
 
     try {

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { getBarberServiceMap } from "@/lib/utils/barberServiceMap";
 
 export function useBookingForm(initialBarber = '', bookingId?: string) {
   const [selectedBarber, setSelectedBarber] = useState(initialBarber)
@@ -11,6 +12,9 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', comments: '' })
   const [availableBarbersForSelectedTime, setAvailableBarbersForSelectedTime] = useState<string[]>([])
   const [selectedBarberForTime, setSelectedBarberForTime] = useState<string>(initialBarber || '')
+
+  const isAnyBarber = (barber: string) => barber.toLowerCase().includes('any')
+  const barberServices = getBarberServiceMap();
 
 
   const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
@@ -40,7 +44,7 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
 
   // Fetch availability whenever date, barber or bookingId changes
   useEffect(() => {
-    if (!selectedDateTime) {
+    if (!selectedDateTime || !selectedService) {
       setAvailableTimes([])
       return
     }
@@ -53,7 +57,8 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
     const params = new URLSearchParams({
       start: startOfDay.toISOString(),
       end: endOfDay.toISOString(),
-      barber: selectedBarber.toLowerCase() === 'any barber' ? 'any' : selectedBarber,
+      barber: isAnyBarber(selectedBarber) ? 'any' : selectedBarber,
+      service: selectedService,
     })
 
     if (bookingId) params.append('bookingId', bookingId)
@@ -61,7 +66,7 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
     fetch(`/api/calendar/availability?${params.toString()}`)
       .then(res => res.json())
       .then(data => {
-        if (selectedBarber && selectedBarber.toLowerCase() !== 'any barber') {
+        if (selectedBarber && !isAnyBarber(selectedBarber)) {
           const slots = (data.availableSlots || []).map((slot: string) => ({
             time: slot,
             barbers: [selectedBarber],
@@ -78,7 +83,7 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
         }
       })
       .catch(() => setAvailableTimes([]))
-  }, [selectedDateTime, selectedBarber, bookingId])
+  }, [selectedDateTime, selectedBarber, selectedService, bookingId])
 
   // Update available barbers for selected time whenever availableTimes or selectedDateTime changes
   useEffect(() => {
@@ -93,15 +98,41 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
 
     if (slot && slot.barbers.length) {
       setAvailableBarbersForSelectedTime(slot.barbers)
-      setSelectedBarberForTime(slot.barbers[0])
+
+      // ⚠️ Sync logic: If the current selected barber is still available for the slot, keep it.
+      if (slot.barbers.includes(selectedBarber)) {
+        setSelectedBarberForTime(selectedBarber)
+      } else {
+        // Otherwise pick the first available one
+        setSelectedBarberForTime(slot.barbers[0])
+      }
+
     } else {
       setAvailableBarbersForSelectedTime([])
       setSelectedBarberForTime('')
     }
-  }, [selectedDateTime, availableTimes])
+  }, [selectedDateTime, availableTimes, selectedBarber])
 
+  useEffect(() => {
+    if (
+      selectedBarber &&
+      !isAnyBarber(selectedBarber)
+    ) {
+      const servicesOffered = barberServices[selectedBarber] || []
 
+      // Case 1: Service is selected but not valid for the selected barber
+      if (!servicesOffered.includes(selectedService)) {
+        setSelectedService('')
+        setSelectedDateTime(null)
+      }
 
+      // Case 2: Barber has no services at all
+      if (servicesOffered.length === 0) {
+        setSelectedService('')
+        setSelectedDateTime(null)
+      }
+    }
+  }, [selectedBarber, selectedService, barberServices])
 
   // handle submit
   const handleSubmit = async (e: React.FormEvent) => {
@@ -110,6 +141,11 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
       alert('Please fill out all required fields.')
       return
     }
+    if (!availableBarbersForSelectedTime.includes(selectedBarberForTime)) {
+      alert('The selected barber is no longer available for this time. Please choose another time or barber.')
+      return
+    }
+
     setLoading(true)
     const formDataToSend = new FormData()
     formDataToSend.append('name', formData.name)

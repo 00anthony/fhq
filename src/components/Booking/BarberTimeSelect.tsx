@@ -30,7 +30,7 @@ export function BarberTimeSelect({
           </div>
 
           <label className="text-sm font-medium mb-1">
-            Optionally choose a different barber
+            Choose another barber (optional)
           </label>
           <select
             value={selectedBarber}

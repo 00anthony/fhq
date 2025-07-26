@@ -2,49 +2,28 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import ExpandedServiceContent from "@/components/ExpandedServiceContent";
-import { BarberOption, Service } from "@/types/services";
+import { Service } from "@/types/services";
+import { getPriceDisplay, getDurationDisplay, } from "@/lib/utils/serviceDisplay";
 
 type ServiceCardProps = {
   service: Service;
+  selectedBarber: string;
   expanded: boolean;
   onToggle: () => void;
   onSelectMedia: (idx: number) => void;
 };
-
-const getRange = (values: (string | number)[], { prefix = "", suffix = "" } = {}) => {
-  const numericValues = values.map((v) =>
-    typeof v === "string" ? parseInt(v) : v
-  );
-
-  // Check if all values are 0 or invalid
-  if (numericValues.every((v) => v === 0)) return "FREE";
-
-  const min = Math.min(...numericValues);
-  const max = Math.max(...numericValues);
-
-  return min === max
-    ? `${prefix}${min}${suffix}`
-    : `${prefix}${min}${suffix} - ${prefix}${max}${suffix}`;
-};
-
-const getPriceRange = (barbers: BarberOption[]) => {
-  const prices = barbers.map((b) => b.price);
-  return getRange(prices, { prefix: "$" });
-};
-
-const getDurationRange = (barbers: BarberOption[]) => {
-  const durations = barbers.map((b) => b.duration);
-  return getRange(durations, { suffix: " min" });
-};
-
-
 
 export default function ServiceCard({
   service,
   expanded,
   onToggle,
   onSelectMedia,
+  selectedBarber,
 }: ServiceCardProps) {
+
+  const priceDisplay = getPriceDisplay(service.barbers, selectedBarber);
+  const durationDisplay = getDurationDisplay(service.barbers, selectedBarber);
+
   return (
     <div
       onClick={onToggle}
@@ -78,11 +57,11 @@ export default function ServiceCard({
       </div>
 
       <p className="text-xs text-gray-400 mt-2">
-        Duration: {getDurationRange(service.barbers)}
+        Duration: {durationDisplay}
       </p>
 
       <div className="mt-4 flex justify-between items-center">
-        <span className="text-lg font-bold">{getPriceRange(service.barbers)}</span>
+        <span className="text-lg font-bold">{priceDisplay}</span>
         <button
           onClick={(e) => e.stopPropagation()} // Prevent toggle on button click
           className="border border-neutral-700 text-gray-300 hover:text-white hover:border-b-gray-600 duration-300 px-4 py-2 rounded-lg transition"

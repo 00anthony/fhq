@@ -1,24 +1,51 @@
-type ServiceSelectProps = {
-  selected: string
-  onChange: (value: string) => void
-  services: string[]
-}
+import { servicesData } from "@/data/services";
+import { getPriceDisplay } from "@/lib/utils/serviceDisplay";
 
-export function ServiceSelect({ selected, onChange, services }: ServiceSelectProps) {
+type ServiceSelectProps = {
+  selected: string;
+  onChange: (value: string) => void;
+  services: string[];
+  selectedBarber: string; 
+  disabled?: boolean;
+};
+
+export function ServiceSelect({ 
+  selected, 
+  onChange, 
+  services, 
+  selectedBarber,
+  disabled = false 
+}: ServiceSelectProps) {
   return (
     <div className="flex flex-col">
       <label className="text-sm font-medium mb-1">Select Service</label>
       <select
         value={selected}
         onChange={(e) => onChange(e.target.value)}
-        className="bg-neutral-800 border border-gray-300 p-2 rounded focus:outline-none focus:ring-1 transition"
+        disabled={disabled}
+        className={`bg-neutral-800 border border-gray-300 p-2 rounded focus:outline-none focus:ring-1 transition ${
+          disabled ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
       >
-        <option value="">Select Service</option>
-        {services.map((service) => (
-          <option key={service} value={service}>
-            {service}
-          </option>
-        ))}
+        <option value="" disabled>
+          {disabled ? 'No services available' : 'Select a Service'}
+        </option>
+
+        {services.map((serviceName) => {
+          // Find the full service object by name
+          const service = servicesData.find((s) => s.name === serviceName);
+
+          // Get price label using your utility
+          const priceLabel = service
+            ? getPriceDisplay(service.barbers, selectedBarber)
+            : "";
+
+          return (
+            <option key={serviceName} value={serviceName}>
+              {serviceName} {priceLabel ? `(${priceLabel})` : ""}
+            </option>
+          );
+        })}
       </select>
     </div>
   )
