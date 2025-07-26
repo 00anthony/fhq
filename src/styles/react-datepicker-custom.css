@@ -70,11 +70,17 @@ h2.react-datepicker__current-month {
   text-align: center;
 }
 
-.react-datepicker__day--selected,
-.react-datepicker__day--keyboard-selected {
+.react-datepicker__day--selected {
   background-color: #742a2a;
   color: white;
+  font-weight: 600;
 }
+
+.react-datepicker__day--keyboard-selected {
+  background-color: transparent !important;
+  color: #d1d5db !important;
+}
+
 
 .react-datepicker__day--today {
   border: none !important;
