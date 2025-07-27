@@ -114,6 +114,7 @@ export async function GET(req: NextRequest) {
     if (!calendarId) continue
 
     try {
+      console.log(`📅 Checking busy times for barber: ${barber}`);
       const busyRaw = await getBusyTimes(start, end, calendarId)
       const busy = busyRaw
         .filter(
@@ -128,6 +129,8 @@ export async function GET(req: NextRequest) {
         if (!slotMap[slot]) slotMap[slot] = new Set()
         slotMap[slot].add(barber)
         allSlotsSet.add(slot)
+
+        console.log(`✅ Available slots for ${barber}:`, available);
       })
     } catch (error) {
       console.error(`Failed to get availability for ${barber}:`, error)
