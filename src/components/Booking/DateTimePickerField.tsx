@@ -79,7 +79,7 @@ export function DateTimePickerField({
               aria-pressed={selected?.getTime() === localDT.toJSDate().getTime()}
               className={`px-3 py-2 rounded-xl border text-sm transition ${
                 selected?.getTime() === localDT.toJSDate().getTime()
-                  ? 'bg-red-900 text-white border-neutral-900'
+                  ? 'bg-red-900 text-white border-gray-300'
                   : 'border-gray-300 text-neutral-300 hover:bg-neutral-900'
               }`}
             >

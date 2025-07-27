@@ -10,6 +10,12 @@ export async function GET(req: NextRequest) {
   const service = searchParams.get('service') || ''
   const selectedBarber = searchParams.get('barber')
 
+  console.log('🟨 API Query Params');
+  console.log('Start:', start);
+  console.log('End:', end);
+  console.log('Service:', service);
+  console.log('Selected Barber:', selectedBarber);
+
   const barberCalendars: Record<string, string> = {
     Jay: 'anthonytij3@gmail.com',
     Luis: 'luisbarber@gmail.com',
@@ -36,6 +42,8 @@ export async function GET(req: NextRequest) {
   if (!barbersToCheck || barbersToCheck.length === 0) {
     return NextResponse.json({ availableSlots: [] });
   }
+
+  console.log('🧑‍🔧 Barbers offering this service:', barbersToCheck);
 
   // Step 2: If a specific barber was selected, filter to just that one
   if (selectedBarber && selectedBarber !== 'any') {
