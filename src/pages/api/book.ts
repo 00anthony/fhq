@@ -66,7 +66,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       content: fileBuffer.toString('base64'),
     };
   }
-
+  
   try {
     // ✅ Convert user's datetime (local) → UTC using Luxon
     const userDateTime = DateTime.fromISO(datetime, { zone: timeZone });
@@ -81,13 +81,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       const startOfDay = userDateTime.startOf('day').toUTC().toISO();
       const endOfDay = userDateTime.endOf('day').toUTC().toISO();
+      
+      console.log('🕒 Booking DateTime (local):', datetime);
+      console.log('🕒 Booking DateTime (UTC):', userDateTime.toUTC().toISO());
+      console.log('📆 Start of Day UTC:', startOfDay);
+      console.log('📆 End of Day UTC:', endOfDay);
 
       // Call availability logic or endpoint
       const response = await fetch(
         `${req.headers.origin}/api/calendar/availability?start=${startOfDay}&end=${endOfDay}&bookingId=${bookingId || ''}`
+        
       );
+      console.log('📅 Fetching availability from:', `${req.headers.origin}/api/calendar/availability?start=${startOfDay}&end=${endOfDay}&bookingId=${bookingId || ''}`)
+
       const availabilityData = await response.json();
+      console.log('📬 availabilityData:', availabilityData);
+
       const availableSlots: { slot: string; barbers: string[] }[] = availabilityData.availableSlots || []
+      console.log('📊 availableSlots.length:', availableSlots.length)
 
       availableSlots.forEach(s => {
         console.log('Slot:', s.slot, 'Barbers:', s.barbers);
