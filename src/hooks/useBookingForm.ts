@@ -44,6 +44,7 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
 
   // Fetch availability whenever date, barber or bookingId changes
   useEffect(() => {
+    console.log('🟢 selectedService changed:', selectedService);
     if (!selectedDateTime || !selectedService) {
       setAvailableTimes([])
       return
@@ -62,6 +63,8 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
     })
 
     if (bookingId) params.append('bookingId', bookingId)
+
+    console.log('📡 Fetching with service:', selectedService, 'barber:', selectedBarber);
 
     fetch(`/api/calendar/availability?${params.toString()}`)
       .then(res => res.json())
