@@ -77,6 +77,7 @@ export function BookingForm({ barberName = '', bookingId, onSuccess }: BookingFo
         selected={selectedDateTime}
         onChange={setSelectedDateTime}
         availableTimes={availableTimes}
+        selectedBarber={selectedBarber}
       />
 
       {availableBarbersForSelectedTime.length > 0 && (

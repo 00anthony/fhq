@@ -3,49 +3,58 @@ import 'react-datepicker/dist/react-datepicker.css'
 import '@/styles/react-datepicker-custom.css'
 import { DateTime } from 'luxon'
 
-
 type DateTimePickerFieldProps = {
   selected: Date | null
   onChange: (date: Date | null) => void
   availableTimes: { time: string; barbers: string[] }[]
+  selectedBarber: string  // <-- add this prop
 }
 
 export function DateTimePickerField({
   selected,
   onChange,
   availableTimes,
+  selectedBarber,
 }: DateTimePickerFieldProps) {
-  const now = new Date()
+  const now = DateTime.now()
 
-  // Extract available dates & group times by day
-  const availableTimesDates = availableTimes
-    .map((t) => ({
-      ...t,
-      date: DateTime.fromISO(t.time, { zone: 'utc' }).toJSDate(),
-    }))
-    .filter(({ date }) => date > now)
+  // 1. Filter availableTimes by selected barber first
+  const filteredTimesByBarber = availableTimes.filter(({ barbers }) => 
+    selectedBarber.toLowerCase() === 'any' || barbers.includes(selectedBarber)
+  )
 
+  // 2. Map times to DateTime objects (local zone) and filter future times
+  const availableTimesDates = filteredTimesByBarber
+    .map(t => {
+      // Parse ISO string in UTC, then convert to local zone
+      const utcDT = DateTime.fromISO(t.time, { zone: 'utc' })
+      const localDT = utcDT.setZone(Intl.DateTimeFormat().resolvedOptions().timeZone)
+      return { ...t, localDT }
+    })
+    .filter(({ localDT }) => localDT > now)
 
-  // When selecting a date, reset time to midnight
-  const handleDateChange = (date: Date | null) => {
-    if (!date) return onChange(null)
-    const newDate = new Date(date)
-    newDate.setHours(0, 0, 0, 0)
-    onChange(newDate)
-  }
-
-  // Filter time slots for selected date
+  // 3. Filter times by selected date (compare only the date parts, ignoring time)
   const timeSlotsForSelectedDate = selected
-    ? availableTimesDates.filter(
-        ({ date }) =>
-          date.toDateString() === selected.toDateString() && date > now
+    ? availableTimesDates.filter(({ localDT }) =>
+        localDT.hasSame(DateTime.fromJSDate(selected), 'day')
       )
     : []
 
-
-  const handleTimeClick = (time: Date) => {
-    onChange(time) // full Date with time selected
+  // 4. When selecting date from calendar, reset time to start of day local
+  const handleDateChange = (date: Date | null) => {
+    if (!date) return onChange(null)
+    const dt = DateTime.fromJSDate(date).startOf('day')
+    onChange(dt.toJSDate())
   }
+
+  // 5. When clicking time slot, pass full Date object for that local time
+  const handleTimeClick = (localDT: DateTime) => {
+    onChange(localDT.toJSDate())
+  }
+
+  // Debug logs (remove or comment out after testing)
+  console.log('Selected barber:', selectedBarber)
+  console.log('Available times filtered by barber and date:', timeSlotsForSelectedDate.map(t => t.localDT.toISO()))
 
   return (
     <div className="flex flex-col space-y-3">
@@ -62,38 +71,32 @@ export function DateTimePickerField({
       {/* Available time slots */}
       {timeSlotsForSelectedDate.length > 0 ? (
         <div className="grid grid-cols-3 gap-2 mt-2">
-          {timeSlotsForSelectedDate.map(({ time, barbers }) => {
-            const utc = DateTime.fromISO(time, { zone: 'utc' })
-            const local = utc.setZone(Intl.DateTimeFormat().resolvedOptions().timeZone)
-            const localDate = local.toJSDate() // Full Date object to use in selection logic
-
-            return (
-              <button
-                key={time}
-                type="button"
-                onClick={() => handleTimeClick(localDate)}
-                aria-pressed={selected?.getTime() === localDate.getTime()}
-                className={`px-3 py-2 rounded-xl border text-sm transition ${
-                  selected?.getTime() === localDate.getTime()
-                    ? 'bg-red-900 text-white border-neutral-900'
-                    : 'border-gray-300 text-neutral-300 hover:bg-neutral-900'
-                }`}
-              >
-                {local.toFormat('hh:mm a')}
-                <span className="block text-xs text-gray-400">
-                  {barbers.length === 1 ? barbers[0] : `${barbers.length} barbers`}
-                </span>
-              </button>
-            )
-          })}
+          {timeSlotsForSelectedDate.map(({ localDT, barbers, time }) => (
+            <button
+              key={time}
+              type="button"
+              onClick={() => handleTimeClick(localDT)}
+              aria-pressed={selected?.getTime() === localDT.toJSDate().getTime()}
+              className={`px-3 py-2 rounded-xl border text-sm transition ${
+                selected?.getTime() === localDT.toJSDate().getTime()
+                  ? 'bg-red-900 text-white border-neutral-900'
+                  : 'border-gray-300 text-neutral-300 hover:bg-neutral-900'
+              }`}
+            >
+              {localDT.toFormat('hh:mm a')}
+              <span className="block text-xs text-gray-400">
+                {barbers.length === 1 ? barbers[0] : `${barbers.length} barbers`}
+              </span>
+            </button>
+          ))}
         </div>
-) : (
-  <p className="text-gray-500 text-sm mt-2">
-    {selected
-      ? '*No available time slots for this day.'
-      : 'Select a date to view available times.'}
-  </p>
-)}
+      ) : (
+        <p className="text-gray-500 text-sm mt-2">
+          {selected
+            ? '*No available time slots for this day.'
+            : 'Select a date to view available times.'}
+        </p>
+      )}
     </div>
   )
 }

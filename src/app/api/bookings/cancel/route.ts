@@ -38,7 +38,7 @@ export async function POST(req: Request) {
     const barberEmails: Record<string, string> = {
       Jay: 'anthonytij3@gmail.com',
       Luis: 'luis@barbershop.com',
-      Los: 'los@barbershop.com',
+      //Los: 'los@barbershop.com',
     }
 
     const barberEmail = barberEmails[booking.barber] || 'fallback@barbershop.com'

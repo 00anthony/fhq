@@ -114,7 +114,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const barberCalendars: Record<string, string> = {
       Jay: 'anthonytij3@gmail.com',
       Luis: 'luisbarber@gmail.com',
-      Los: 'losbarber@gmail.com',
+      //Los: 'losbarber@gmail.com',
     };
 
     const calendarId = barberCalendars[barber] || 'primary'
@@ -138,7 +138,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const barberEmails: Record<string, string> = {
       Jay: 'anthonytij3@gmail.com',
       Luis: 'luis@barbershop.com',
-      Los: 'los@barbershop.com',
+      //Los: 'los@barbershop.com',
     }
 
     const barberEmail = barberEmails[barber] || 'fallback@barbershop.com'

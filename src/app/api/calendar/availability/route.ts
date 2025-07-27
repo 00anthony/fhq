@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   const barberCalendars: Record<string, string> = {
     Jay: 'anthonytij3@gmail.com',
     Luis: 'luisbarber@gmail.com',
-    Los: 'losbarber@gmail.com',
+    //Los: 'losbarber@gmail.com',
   };
 
   if (!start || !end) {
@@ -31,7 +31,6 @@ export async function GET(req: NextRequest) {
 
     console.log('Query received:', service);
     console.log('Selected barber:', selectedBarber)
-    console.log('Barber received', barbersToCheck)
 
 
   if (!barbersToCheck || barbersToCheck.length === 0) {
@@ -42,6 +41,8 @@ export async function GET(req: NextRequest) {
   if (selectedBarber && selectedBarber !== 'any') {
     barbersToCheck = barbersToCheck.filter(b => b === selectedBarber);
   }
+
+  console.log('Barber received', barbersToCheck)
 
   // Define working hours and slot duration
   const workingHours = { startHour: 9, endHour: 18 }
