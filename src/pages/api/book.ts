@@ -87,11 +87,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         `${req.headers.origin}/api/calendar/availability?start=${startOfDay}&end=${endOfDay}&bookingId=${bookingId || ''}`
       );
       const availabilityData = await response.json();
-      const availableSlots: { time: string; barbers: string[] }[] = availabilityData.availableSlots || [];
+      const availableSlots: { slot: string; barbers: string[] }[] = availabilityData.availableSlots || []
 
-      const isAvailable = availableSlots.some(slotObj =>
-        DateTime.fromISO(slotObj.time).toUTC().hasSame(userDateTime.toUTC(), 'minute')
-      )
+      availableSlots.forEach(s => {
+        console.log('Slot:', s.slot, 'Barbers:', s.barbers);
+        console.log('Matches Barber?', s.barbers.includes(barber));
+        console.log('Matches Time?', DateTime.fromISO(s.slot).toMillis() === userDateTime.toMillis());
+      });
+
+
+      const isAvailable = availableSlots.some((slotObj) => {
+        console.log('🔍 Checking against slots:', availableSlots.length)
+        console.log('⏰ Selected:', userDateTime.toISO(), userDateTime.toMillis())
+
+        if (!slotObj?.slot || !Array.isArray(slotObj.barbers)) return false
+        return (
+          slotObj.barbers.includes(barber) &&
+          DateTime.fromISO(slotObj.slot).toMillis() === userDateTime.toMillis()
+          
+        )
+      })
+
 
       console.log('🔍 Available slots:', availableSlots)
       console.log('⏰ Selected:', userDateTime.toUTC().toISO())
