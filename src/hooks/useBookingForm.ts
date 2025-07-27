@@ -67,10 +67,14 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
       .then(res => res.json())
       .then(data => {
         if (selectedBarber && !isAnyBarber(selectedBarber)) {
-          const slots = (data.availableSlots || []).map((slot: string) => ({
-            time: slot,
-            barbers: [selectedBarber],
-          }))
+          const slots = (data.availableSlots || [])
+            .filter((slot: { slot: string; barbers: string[] }) =>
+              slot.barbers.includes(selectedBarber)
+            )
+            .map((slot: { slot: string; barbers: string[] }) => ({
+              time: slot.slot,
+              barbers: slot.barbers,
+            }))
           setAvailableTimes(slots)
         } else {
           const slots = (data.availableSlots || []).map(
@@ -80,6 +84,7 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
             })
           )
           setAvailableTimes(slots)
+          console.log('✅ Slots set for UI:', slots)
         }
       })
       .catch(() => setAvailableTimes([]))
