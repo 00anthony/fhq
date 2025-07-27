@@ -19,7 +19,10 @@ export function DateTimePickerField({
 
   // Extract available dates & group times by day
   const availableTimesDates = availableTimes
-    .map((t) => ({ ...t, date: new Date(t.time) }))
+    .map((t) => ({
+      ...t,
+      date: DateTime.fromISO(t.time, { zone: 'utc' }).toJSDate(),
+    }))
     .filter(({ date }) => date > now)
 
 
