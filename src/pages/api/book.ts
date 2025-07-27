@@ -87,11 +87,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         `${req.headers.origin}/api/calendar/availability?start=${startOfDay}&end=${endOfDay}&bookingId=${bookingId || ''}`
       );
       const availabilityData = await response.json();
-      const availableSlots: string[] = availabilityData.availableSlots || [];
+      const availableSlots: { time: string; barbers: string[] }[] = availabilityData.availableSlots || [];
 
-      const isAvailable = availableSlots.some(slot =>
-        DateTime.fromISO(slot).toUTC().hasSame(userDateTime.toUTC(), 'minute')
-      );
+      const isAvailable = availableSlots.some(slotObj =>
+        DateTime.fromISO(slotObj.time).toUTC().hasSame(userDateTime.toUTC(), 'minute')
+      )
+
       console.log('🔍 Available slots:', availableSlots)
       console.log('⏰ Selected:', userDateTime.toUTC().toISO())
 
