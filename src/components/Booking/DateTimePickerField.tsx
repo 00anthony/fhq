@@ -1,6 +1,7 @@
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import '@/styles/react-datepicker-custom.css'
+import { DateTime } from 'luxon'
 
 
 type DateTimePickerFieldProps = {
@@ -58,25 +59,31 @@ export function DateTimePickerField({
       {/* Available time slots */}
       {timeSlotsForSelectedDate.length > 0 ? (
         <div className="grid grid-cols-3 gap-2 mt-2">
-          {timeSlotsForSelectedDate.map(({ time, date, barbers }) => (
-        <button
-          key={time}
-          type="button"
-          onClick={() => handleTimeClick(date)}
-          aria-pressed={selected?.getTime() === date.getTime()}
-          className={`px-3 py-2 rounded-xl border text-sm transition ${
-            selected?.getTime() === date.getTime()
-              ? 'bg-red-900 text-white border-neutral-900'
-              : 'border-gray-300 text-neutral-300 hover:bg-neutral-900'
-          }`}
-        >
-          {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}
-          <span className="block text-xs text-gray-400">
-            {barbers.length === 1 ? barbers[0] : `${barbers.length} barbers`}
-          </span>
-        </button>
-      ))}
-  </div>
+          {timeSlotsForSelectedDate.map(({ time, barbers }) => {
+            const utc = DateTime.fromISO(time, { zone: 'utc' })
+            const local = utc.setZone(Intl.DateTimeFormat().resolvedOptions().timeZone)
+            const localDate = local.toJSDate() // Full Date object to use in selection logic
+
+            return (
+              <button
+                key={time}
+                type="button"
+                onClick={() => handleTimeClick(localDate)}
+                aria-pressed={selected?.getTime() === localDate.getTime()}
+                className={`px-3 py-2 rounded-xl border text-sm transition ${
+                  selected?.getTime() === localDate.getTime()
+                    ? 'bg-red-900 text-white border-neutral-900'
+                    : 'border-gray-300 text-neutral-300 hover:bg-neutral-900'
+                }`}
+              >
+                {local.toFormat('hh:mm a')}
+                <span className="block text-xs text-gray-400">
+                  {barbers.length === 1 ? barbers[0] : `${barbers.length} barbers`}
+                </span>
+              </button>
+            )
+          })}
+        </div>
 ) : (
   <p className="text-gray-500 text-sm mt-2">
     {selected
