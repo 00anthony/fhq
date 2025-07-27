@@ -93,7 +93,11 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
       return
     }
 
-    const slot = availableTimes.find(slot => new Date(slot.time).getTime() === selectedDateTime.getTime())
+    const selectedTimeMs = selectedDateTime.getTime();
+    const slot = availableTimes.find(slot => {
+      const slotTimeMs = new Date(slot.time).getTime();
+      return Math.abs(slotTimeMs - selectedTimeMs) < 60 * 1000; // within 1 minute
+    });
 
 
     if (slot && slot.barbers.length) {
@@ -112,6 +116,11 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
       setSelectedBarberForTime('')
     }
   }, [selectedDateTime, availableTimes, selectedBarber])
+
+  useEffect(() => {
+    console.log('Fetched slots:', availableTimes)
+  }, [availableTimes])
+
 
   useEffect(() => {
     if (

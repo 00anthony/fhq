@@ -29,6 +29,11 @@ export async function GET(req: NextRequest) {
     ?.barbers.map(b => b.name)
     .filter(name => barberCalendars[name]); // only include barbers with calendar ID
 
+    console.log('Query received:', service);
+    console.log('Selected barber:', selectedBarber)
+    console.log('Barber received', barbersToCheck)
+
+
   if (!barbersToCheck || barbersToCheck.length === 0) {
     return NextResponse.json({ availableSlots: [] });
   }
@@ -125,6 +130,8 @@ export async function GET(req: NextRequest) {
     slot,
     barbers: Array.from(slotMap[slot])
   }))
+
+  console.log('Returning available slots:', availableSlots)
 
   return NextResponse.json({ availableSlots })
 }
