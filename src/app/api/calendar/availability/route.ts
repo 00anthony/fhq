@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
   console.log('Barber received', barbersToCheck)
 
   // Define working hours and slot duration
-  const workingHours = { startHour: 9, endHour: 18 }
+  const workingHours = { startHour: 9, endHour: 17 }
   const slotDurationMinutes = 30
 
   // Prepare a map of all barbers' available slots
