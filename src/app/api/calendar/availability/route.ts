@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getBusyTimes } from '@/lib/google-calendar'
 import { servicesData } from '@/data/services'
+import { DateTime, Interval } from 'luxon'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
@@ -67,40 +68,39 @@ export async function GET(req: NextRequest) {
     workingHours: { startHour: number; endHour: number },
     slotDurationMinutes: number
   ): string[] {
+    const timeZone = 'America/Chicago' //can dynamically infer later
     const slots: string[] = []
 
-    const startDate = new Date(start)
-    const endDate = new Date(end)
+    const startDate = DateTime.fromISO(start, { zone: timeZone }).startOf('day')
+    const endDate = DateTime.fromISO(end, { zone: timeZone }).startOf('day')
 
     for (
-      let day = new Date(startDate);
+      let day = startDate;
       day <= endDate;
-      day.setDate(day.getDate() + 1)
+      day = day.plus({ days: 1 })
     ) {
+      const workStart = day.set({ hour: workingHours.startHour, minute: 0 })
+      const workEnd = day.set({ hour: workingHours.endHour, minute: 0 })
+
       for (
-        let hour = workingHours.startHour;
-        hour < workingHours.endHour;
-        hour++
+        let slotTime = workStart;
+        slotTime < workEnd;
+        slotTime = slotTime.plus({ minutes: slotDurationMinutes })
       ) {
-        for (
-          let minute = 0;
-          minute < 60;
-          minute += slotDurationMinutes
-        ) {
-          const slot = new Date(day)
-          slot.setHours(hour, minute, 0, 0)
-          const slotStart = slot.getTime()
-          const slotEnd = slotStart + slotDurationMinutes * 60 * 1000
+        const slotStartUtc = slotTime.toUTC()
+        const slotEndUtc = slotTime.plus({ minutes: slotDurationMinutes }).toUTC()
 
-          const isBusy = busy.some(({ start, end }) => {
-            const busyStart = new Date(start).getTime()
-            const busyEnd = new Date(end).getTime()
-            return slotStart < busyEnd && slotEnd > busyStart
-          })
+        const isBusy = busy.some(({ start, end }) => {
+          const busyInterval = Interval.fromDateTimes(
+            DateTime.fromISO(start),
+            DateTime.fromISO(end)
+          )
+          const slotInterval = Interval.fromDateTimes(slotStartUtc, slotEndUtc)
+          return busyInterval.overlaps(slotInterval)
+        })
 
-          if (!isBusy) {
-            slots.push(new Date(slotStart).toISOString())
-          }
+        if (!isBusy) {
+          slots.push(slotStartUtc.toISO()!)
         }
       }
     }
