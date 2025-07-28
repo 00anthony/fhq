@@ -81,7 +81,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       const startOfDay = userDateTime.startOf('day').toUTC().toISO();
       const endOfDay = userDateTime.endOf('day').toUTC().toISO();
-      
+
       console.log('🕒 Booking DateTime (local):', datetime);
       console.log('🕒 Booking DateTime (UTC):', userDateTime.toUTC().toISO());
       console.log('📆 Start of Day UTC:', startOfDay);
@@ -89,10 +89,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // Call availability logic or endpoint
       const response = await fetch(
-        `${req.headers.origin}/api/calendar/availability?start=${startOfDay}&end=${endOfDay}&bookingId=${bookingId || ''}`
-        
+        `${req.headers.origin}/api/calendar/availability?start=${startOfDay}&end=${endOfDay}&bookingId=${bookingId || ''}&barber=${encodeURIComponent(barber)}&service=${encodeURIComponent(service)}`
       );
-      console.log('📅 Fetching availability from:', `${req.headers.origin}/api/calendar/availability?start=${startOfDay}&end=${endOfDay}&bookingId=${bookingId || ''}`)
+
+      console.log('📡 Booking API availability fetch params:', {
+        start: startOfDay,
+        end: endOfDay,
+        barber,
+        service,
+        bookingId
+      });
+
+
+      console.log('📅 Fetching availability from:', `${req.headers.origin}/api/calendar/availability?start=${startOfDay}&end=${endOfDay}&bookingId=${bookingId || ''}&barber=${encodeURIComponent(barber)}&service=${encodeURIComponent(service)}`)
 
       const availabilityData = await response.json();
       console.log('📬 availabilityData:', availabilityData);
