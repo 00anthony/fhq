@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getBarberServiceMap } from "@/lib/utils/barberServiceMap";
+import { DateTime } from 'luxon'
 
 export function useBookingForm(initialBarber = '', bookingId?: string) {
   const [selectedBarber, setSelectedBarber] = useState(initialBarber)
@@ -50,14 +51,15 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
       return
     }
 
-    const dateStr = selectedDateTime.toISOString().split('T')[0]
-    const startOfDay = new Date(dateStr)
-    const endOfDay = new Date(dateStr)
-    endOfDay.setHours(23, 59, 59, 999)
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const selectedDT = DateTime.fromJSDate(selectedDateTime, { zone: timeZone });
+    const startISO = selectedDT.startOf('day').toUTC().toISO() || '';
+    const endISO = selectedDT.endOf('day').toUTC().toISO() || '';
+
 
     const params = new URLSearchParams({
-      start: startOfDay.toISOString(),
-      end: endOfDay.toISOString(),
+      start: startISO,
+      end: endISO,
       barber: isAnyBarber(selectedBarber) ? 'any' : selectedBarber,
       service: selectedService,
     })
