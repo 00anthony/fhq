@@ -36,6 +36,7 @@ export function BookingForm({ barberName = '', bookingId, onSuccess }: BookingFo
     availableBarbersForSelectedTime,
     selectedBarberForTime,
     setSelectedBarberForTime,
+    isFetchingTimes
   } = useBookingForm(barberName, bookingId)
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -78,6 +79,7 @@ export function BookingForm({ barberName = '', bookingId, onSuccess }: BookingFo
         onChange={setSelectedDateTime}
         availableTimes={availableTimes}
         selectedBarber={selectedBarber}
+        isLoading={isFetchingTimes}
       />
 
       {availableBarbersForSelectedTime.length > 0 && (

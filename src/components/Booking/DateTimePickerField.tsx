@@ -7,7 +7,8 @@ type DateTimePickerFieldProps = {
   selected: Date | null
   onChange: (date: Date | null) => void
   availableTimes: { time: string; barbers: string[] }[]
-  selectedBarber: string  // <-- add this prop
+  selectedBarber: string 
+  isLoading: boolean
 }
 
 export function DateTimePickerField({
@@ -15,6 +16,7 @@ export function DateTimePickerField({
   onChange,
   availableTimes,
   selectedBarber,
+  isLoading,
 }: DateTimePickerFieldProps) {
   const now = DateTime.now()
 
@@ -77,7 +79,9 @@ export function DateTimePickerField({
       />
 
       {/* Available time slots */}
-      {timeSlotsForSelectedDate.length > 0 ? (
+      {isLoading ? (
+        <p className="text-gray-400 text-sm mt-2 italic">Loading available times...</p>
+      ) : timeSlotsForSelectedDate.length > 0 ? (
         <div className="grid grid-cols-3 gap-2 mt-2">
           {timeSlotsForSelectedDate.map(({ localDT, barbers, time }) => (
             <button

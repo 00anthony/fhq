@@ -13,6 +13,7 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', comments: '' })
   const [availableBarbersForSelectedTime, setAvailableBarbersForSelectedTime] = useState<string[]>([])
   const [selectedBarberForTime, setSelectedBarberForTime] = useState<string>(initialBarber || '')
+  const [isFetchingTimes, setIsFetchingTimes] = useState(false);
 
   const isAnyBarber = (barber: string) => barber.toLowerCase().includes('any')
   const barberServices = getBarberServiceMap();
@@ -65,6 +66,8 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
     })
 
     if (bookingId) params.append('bookingId', bookingId)
+      
+    setIsFetchingTimes(true); // 🟡 Show loading
 
     console.log('📡 Fetching with service:', selectedService, 'barber:', selectedBarber);
 
@@ -93,6 +96,9 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
         }
       })
       .catch(() => setAvailableTimes([]))
+      .finally(() => {
+        setIsFetchingTimes(false); // ✅ Hide loading
+      });
   }, [selectedDateTime, selectedBarber, selectedService, bookingId])
 
   // Update available barbers for selected time whenever availableTimes or selectedDateTime changes
@@ -200,5 +206,6 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
     loading, handleSubmit,
     availableBarbersForSelectedTime,
     selectedBarberForTime, setSelectedBarberForTime,
+    isFetchingTimes,
   }
 }
