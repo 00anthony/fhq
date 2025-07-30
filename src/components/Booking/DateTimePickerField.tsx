@@ -18,6 +18,8 @@ export function DateTimePickerField({
 }: DateTimePickerFieldProps) {
   const now = DateTime.now()
 
+  console.log('All availableTimes (raw):', availableTimes);
+
   // 1. Filter availableTimes by selected barber first
   const filteredTimesByBarber = availableTimes.filter(({ barbers }) => 
     selectedBarber.toLowerCase() === 'any' || barbers.includes(selectedBarber)
@@ -51,6 +53,12 @@ export function DateTimePickerField({
   const handleTimeClick = (localDT: DateTime) => {
     onChange(localDT.toJSDate())
   }
+
+  //checking if slot dates are from the same day in local time
+  console.log("Selected Date (JS):", selected);
+  console.log("Selected Date (Luxon):", selected ? DateTime.fromJSDate(selected).toISO() : null);
+  console.log("All available slot dates (local):", availableTimesDates.map(t => t.localDT.toISODate()));
+
 
   // Debug logs (remove or comment out after testing)
   console.log('Selected barber:', selectedBarber)

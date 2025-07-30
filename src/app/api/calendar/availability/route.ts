@@ -71,8 +71,9 @@ export async function GET(req: NextRequest) {
     const timeZone = 'America/Chicago' //can dynamically infer later
     const slots: string[] = []
 
-    const startDate = DateTime.fromISO(start, { zone: timeZone }).startOf('day')
-    const endDate = DateTime.fromISO(end, { zone: timeZone }).startOf('day')
+    // Parse input dates as UTC, then convert to local timezone start of day
+    const startDate = DateTime.fromISO(start, { zone: 'utc' }).setZone(timeZone).startOf('day')
+    const endDate = DateTime.fromISO(end, { zone: 'utc' }).setZone(timeZone).startOf('day')
 
     for (
       let day = startDate;
@@ -92,9 +93,9 @@ export async function GET(req: NextRequest) {
 
         const isBusy = busy.some(({ start, end }) => {
           const busyInterval = Interval.fromDateTimes(
-            DateTime.fromISO(start),
-            DateTime.fromISO(end)
-          )
+            DateTime.fromISO(start, { zone: 'utc' }),
+            DateTime.fromISO(end, { zone: 'utc' })
+          );
           const slotInterval = Interval.fromDateTimes(slotStartUtc, slotEndUtc)
           return busyInterval.overlaps(slotInterval)
         })
@@ -107,7 +108,6 @@ export async function GET(req: NextRequest) {
 
     return slots
   }
-
 
   for (const barber of barbersToCheck) {
     const calendarId = barberCalendars[barber]
