@@ -8,6 +8,7 @@ type DateTimePickerFieldProps = {
   onChange: (date: Date | null) => void
   availableTimes: { time: string; barbers: string[] }[]
   selectedBarber: string 
+  selectedService: string
   isLoading: boolean
 }
 
@@ -16,6 +17,7 @@ export function DateTimePickerField({
   onChange,
   availableTimes,
   selectedBarber,
+  selectedService,
   isLoading,
 }: DateTimePickerFieldProps) {
   const now = DateTime.now()
@@ -56,11 +58,14 @@ export function DateTimePickerField({
     onChange(localDT.toJSDate())
   }
 
+  const isMissingBarber = !selectedBarber
+  const isMissingService = !selectedService
+  const shouldDisableCalendar = isMissingBarber || isMissingService  
+
   //checking if slot dates are from the same day in local time
   console.log("Selected Date (JS):", selected);
   console.log("Selected Date (Luxon):", selected ? DateTime.fromJSDate(selected).toISO() : null);
   console.log("All available slot dates (local):", availableTimesDates.map(t => t.localDT.toISODate()));
-
 
   // Debug logs (remove or comment out after testing)
   console.log('Selected barber:', selectedBarber)
@@ -69,18 +74,32 @@ export function DateTimePickerField({
   return (
     <div className="flex flex-col space-y-3">
       <label className="text-sm font-medium">Select Date & Time</label>
-      <DatePicker
-        selected={selected}
-        onChange={handleDateChange}
-        minDate={new Date()}
-        maxDate={new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)}
-        inline
-        calendarClassName="font-sans"
-      />
+      <div className="relative">
+        <DatePicker
+          selected={selected}
+          onChange={handleDateChange}
+          minDate={new Date()}
+          maxDate={new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)}
+          inline
+          calendarClassName="font-sans"
+        />
+        
+        {shouldDisableCalendar && (
+          <div className="absolute inset-0 backdrop-blur-sm flex items-center justify-center z-10 rounded-xl">
+            <p className="text-sm text-gray-500 px-4 text-center">
+              {isMissingBarber && isMissingService
+                ? 'Please select a barber and a service to view available times.'
+                : isMissingBarber
+                ? 'Please select a barber.'
+                : 'Please select a service.'}
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* Available time slots */}
       {isLoading ? (
-        <p className="text-gray-400 text-sm mt-2 italic">Loading available times...</p>
+        <p className="text-gray-400 text-sm italic">Loading available times...</p>
       ) : timeSlotsForSelectedDate.length > 0 ? (
         <div className="grid grid-cols-3 gap-2 mt-2">
           {timeSlotsForSelectedDate.map(({ localDT, barbers, time }) => (
@@ -103,11 +122,13 @@ export function DateTimePickerField({
           ))}
         </div>
       ) : (
-        <p className="text-gray-500 text-sm mt-2">
-          {selected
-            ? '*No available time slots for this day.'
-            : 'Select a date to view available times.'}
-        </p>
+        shouldDisableCalendar || isLoading || timeSlotsForSelectedDate.length !== 0 ? null : (
+          <p className="text-gray-500 text-sm">
+            {selected
+              ? '*No available time slots for this day.'
+              : 'Select a date to view available times.'}
+          </p>
+        )
       )}
     </div>
   )

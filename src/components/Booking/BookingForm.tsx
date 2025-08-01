@@ -79,6 +79,7 @@ export function BookingForm({ barberName = '', bookingId, onSuccess }: BookingFo
         onChange={setSelectedDateTime}
         availableTimes={availableTimes}
         selectedBarber={selectedBarber}
+        selectedService={selectedService}
         isLoading={isFetchingTimes}
       />
 
