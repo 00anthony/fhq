@@ -23,8 +23,8 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
   const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif']
 
   // handle input
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))
+  const handleInputChange = (name: string, value: string) => {
+    setFormData(prev => ({ ...prev, [name]: value }))
   }
 
   // handle file
