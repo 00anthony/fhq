@@ -28,20 +28,26 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
   }
 
   // handle file
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (file: File | null): boolean => {
     setFileError(null)
-    if (e.target.files && e.target.files[0]) {
-      const selectedFile = e.target.files[0]
-      if (!ALLOWED_TYPES.includes(selectedFile.type)) {
-        setFileError('Invalid file type. Only JPG, PNG, GIF allowed.')
-        return
-      }
-      if (selectedFile.size > MAX_FILE_SIZE) {
-        setFileError('File size too large. Max 5 MB allowed.')
-        return
-      }
-      setFile(selectedFile)
+
+    if (!file) {
+      setFile(null)
+      return false
     }
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setFileError('Invalid file type. Only JPG, PNG, GIF allowed.')
+      return false
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      setFileError('File size too large. Max 5 MB allowed.')
+      return false
+    }
+
+    setFile(file)
+    return true
   }
 
   // Fetch availability whenever date, barber or bookingId changes

@@ -91,9 +91,9 @@ export function BookingForm({ barberName = '', bookingId, onSuccess }: BookingFo
         />
       )}
 
-      <FileUpload onChange={handleFileChange} error={fileError} />
-
       <ContactFields formData={formData} onChange={handleInputChange} />
+
+      <FileUpload onChange={handleFileChange} error={fileError} />
 
       <button
         disabled={loading}
