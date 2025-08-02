@@ -17,7 +17,7 @@ export function ServiceSelect({
   disabled = false 
 }: ServiceSelectProps) {
   return (
-    <div className="flex flex-col">
+    <div id="service-section" className="flex flex-col scroll-mt-20">
       <label className="text-sm font-medium mb-1">Select Service</label>
       <select
         value={selected}

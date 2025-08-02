@@ -10,7 +10,7 @@ type BarberSelectProps = {
 export function BarberSelect({ selected, onChange, barbers, selectedService }: BarberSelectProps) {
   const barberServices = getBarberServiceMap();
   return (
-    <div className="flex flex-col">
+    <div id="barber-section" className="flex flex-col scroll-mt-20">
       <label htmlFor="barber-select" className="text-sm font-medium mb-1">Select Barber</label>
       <select
         id="barber-select"

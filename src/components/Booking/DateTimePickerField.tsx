@@ -72,7 +72,7 @@ export function DateTimePickerField({
   console.log('Available times filtered by barber and date:', timeSlotsForSelectedDate.map(t => t.localDT.toISO()))
 
   return (
-    <div className="flex flex-col space-y-3">
+    <div id='date-section' className="flex flex-col space-y-3 scroll-mt-24">
       <label className="text-sm font-medium">Select Date & Time</label>
       <div className="relative">
         <DatePicker
@@ -101,7 +101,7 @@ export function DateTimePickerField({
       {isLoading ? (
         <p className="text-gray-400 text-sm italic">Loading available times...</p>
       ) : timeSlotsForSelectedDate.length > 0 ? (
-        <div className="grid grid-cols-3 gap-2 mt-2">
+        <div id='time-section' className="grid grid-cols-3 gap-2 mt-2 scroll-mt-20">
           {timeSlotsForSelectedDate.map(({ localDT, barbers, time }) => (
             <button
               key={time}

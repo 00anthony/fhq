@@ -7,10 +7,14 @@ import { DateTimePickerField } from './DateTimePickerField'
 import { FileUpload } from './FileUpload'
 import { ContactFields } from './ContactFields'
 import { BarberTimeSelect } from './BarberTimeSelect'
-import { getBarberServiceMap } from "@/lib/utils/barberServiceMap";
+import { BookingSummary } from './BookingSummary'
 import { allBarbers } from '@/data/services';
+import { servicesData } from '@/data/services'
+import { getBarberServiceMap } from "@/lib/utils/barberServiceMap";
+import { getServiceSummary } from '@/lib/utils/serviceSummary'
 
-const services = ['Haircut', 'Beard Trim', 'Haircut & Design', 'Hair + Beard', 'Deluxe Haircut', 'Consultation']
+
+const services = servicesData.map(s => s.name)
 
 type BookingFormProps = {
   barberName?: string
@@ -51,6 +55,8 @@ export function BookingForm({ barberName = '', bookingId, onSuccess }: BookingFo
     selectedBarber && selectedBarber.toLowerCase() !== 'any'
       ? barberServices[selectedBarber] || []
       : services
+
+  const summaryService = getServiceSummary(selectedService, selectedBarber, selectedBarberForTime)
 
   return (
     <form
@@ -94,6 +100,13 @@ export function BookingForm({ barberName = '', bookingId, onSuccess }: BookingFo
       <ContactFields formData={formData} onChange={handleInputChange} />
 
       <FileUpload onChange={handleFileChange} error={fileError} />
+
+      <BookingSummary
+        barber={selectedBarber.toLowerCase() === 'any' ? selectedBarberForTime : selectedBarber}
+        service={summaryService}
+        date={selectedDateTime}
+        time={selectedDateTime}
+      />
 
       <button
         disabled={loading}
