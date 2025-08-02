@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { getBarberServiceMap } from "@/lib/utils/barberServiceMap";
 import { DateTime } from 'luxon'
+import { useRouter } from 'next/navigation'
+
 
 export function useBookingForm(initialBarber = '', bookingId?: string) {
   const [selectedBarber, setSelectedBarber] = useState(initialBarber)
@@ -165,6 +167,8 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
     }
   }, [selectedBarber, selectedService, barberServices])
 
+  const router = useRouter()
+
   // handle submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -192,7 +196,11 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
     try {
       const res = await fetch('/api/book', { method: 'POST', body: formDataToSend })
       const result = await res.json()
-      if (result.success) alert('Booking confirmed!')
+      
+      if (result.success) {
+        const bookingId = result.bookingId // from backend
+        router.push(`/manage-booking${bookingId ? `?bookingId=${bookingId}` : ''}`)
+      }
       else alert('Booking failed: ' + (result.error || 'Unknown error'))
     } catch (err) {
       console.error('Booking failed', err)
