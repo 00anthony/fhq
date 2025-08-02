@@ -58,6 +58,8 @@ export function BookingForm({ barberName = '', bookingId, onSuccess }: BookingFo
 
   const summaryService = getServiceSummary(selectedService, selectedBarber, selectedBarberForTime)
 
+  const selectedServiceObject = servicesData.find(s => s.name === selectedService);
+
   return (
     <form
       onSubmit={onSubmit}
@@ -94,6 +96,7 @@ export function BookingForm({ barberName = '', bookingId, onSuccess }: BookingFo
           availableBarbers={availableBarbersForSelectedTime}
           selectedBarber={selectedBarberForTime}
           onChange={setSelectedBarberForTime}
+          serviceBarbers={selectedServiceObject?.barbers ?? []}
         />
       )}
 

@@ -23,7 +23,7 @@ export function ServiceSelect({
         value={selected}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className={`bg-neutral-800 border border-gray-300 p-2 rounded focus:outline-none focus:ring-1 transition ${
+        className={`bg-neutral-800 border border-gray-300 p-2 rounded focus:outline-none transition ${
           disabled ? 'opacity-50 cursor-not-allowed' : ''
         }`}
       >
@@ -35,7 +35,7 @@ export function ServiceSelect({
           // Find the full service object by name
           const service = servicesData.find((s) => s.name === serviceName);
 
-          // Get price label using your utility
+          // Get price label using utility
           const priceLabel = service
             ? getPriceDisplay(service.barbers, selectedBarber)
             : "";
