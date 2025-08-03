@@ -44,30 +44,38 @@ export async function POST(req: Request) {
     const barberEmail = barberEmails[booking.barber] || 'fallback@barbershop.com'
 
     // Client email
-    await resend.emails.send({
-      from: 'Barbershop <onboarding@resend.dev>',
-      to: booking.email,
-      subject: 'Your Appointment Has Been Canceled',
-      html: `
-        <h2>Hi ${booking.name},</h2>
-        <p>Your appointment for <strong>${booking.service}</strong> with <strong>${booking.barber}</strong> on <strong>${formattedTime}</strong> has been canceled.</p>
-        <p>If this was a mistake, feel free to book again anytime.</p>
-      `,
-    })
+    try {
+      await resend.emails.send({
+        from: 'Barbershop <onboarding@resend.dev>',
+        to: booking.email,
+        subject: 'Your Appointment Has Been Canceled',
+        html: `
+          <h2>Hi ${booking.name},</h2>
+          <p>Your appointment for <strong>${booking.service}</strong> with <strong>${booking.barber}</strong> on <strong>${formattedTime}</strong> has been canceled.</p>
+          <p>If this was a mistake, feel free to book again anytime.</p>
+        `,
+      })
+    } catch (e) {
+      console.error('Failed to send client cancellation email: ', e)
+    }
 
     // Barber email
-    await resend.emails.send({
-      from: 'Barbershop <onboarding@resend.dev>',
-      to: barberEmail,
-      subject: 'Appointment Canceled',
-      html: `
-        <h2>Appointment Canceled</h2>
-        <p><strong>Client:</strong> ${booking.name}</p>
-        <p><strong>Service:</strong> ${booking.service}</p>
-        <p><strong>When:</strong> ${formattedTime}</p>
-        <p>This booking has been canceled by the client.</p>
-      `,
-    })
+    try {
+      await resend.emails.send({
+        from: 'Barbershop <onboarding@resend.dev>',
+        to: barberEmail,
+        subject: 'Appointment Canceled',
+        html: `
+          <h2>Appointment Canceled</h2>
+          <p><strong>Client:</strong> ${booking.name}</p>
+          <p><strong>Service:</strong> ${booking.service}</p>
+          <p><strong>When:</strong> ${formattedTime}</p>
+          <p>This booking has been canceled by the client.</p>
+        `,
+      })
+    } catch (e) {
+      console.error('Failed to send barber cancellation email:', e)
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

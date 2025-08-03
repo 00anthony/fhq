@@ -41,6 +41,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
     }
 
+    // Overlap check before calendar update:
+    const overlapping = await prisma.booking.findFirst({
+      where: {
+        barber: booking.barber,
+        datetime: dt.toJSDate(),
+        id: { not: bookingId }, // don’t check against the current booking
+      },
+    })
+
+    if (overlapping) {
+      return NextResponse.json({ error: 'That time slot has already been taken' }, { status: 409 })
+    }
+
     // Update Google Calendar event
     const calendar = google.calendar({ version: 'v3', auth })
     await calendar.events.patch({
@@ -72,31 +85,39 @@ export async function POST(req: Request) {
     const barberEmail = barberEmails[booking.barber] || 'fallback@barbershop.com'
 
     // Client email
-    await resend.emails.send({
-      from: 'Barbershop <onboarding@resend.dev>',
-      to: booking.email,
-      subject: 'Your Appointment Has Been Rescheduled',
-      html: `
-        <h2>Hi ${booking.name},</h2>
-        <p>Your appointment for <strong>${booking.service}</strong> with <strong>${booking.barber}</strong> has been rescheduled to:</p>
-        <p><strong>${formattedTime}</strong></p>
-        <p>If you need to make more changes, you can always return to your booking link.</p>
-      `,
-    })
+    try {
+      await resend.emails.send({
+        from: 'Barbershop <onboarding@resend.dev>',
+        to: booking.email,
+        subject: 'Your Appointment Has Been Rescheduled',
+        html: `
+          <h2>Hi ${booking.name},</h2>
+          <p>Your appointment for <strong>${booking.service}</strong> with <strong>${booking.barber}</strong> has been rescheduled to:</p>
+          <p><strong>${formattedTime}</strong></p>
+          <p>If you need to make more changes, you can always return to your booking link.</p>
+        `,
+      })
+    } catch (emailError) {
+      console.error('Faild to send client rescheduling email:', emailError)
+    }
 
     // Barber email
-    await resend.emails.send({
-      from: 'Barbershop <onboarding@resend.dev>',
-      to: barberEmail,
-      subject: 'Appointment Rescheduled',
-      html: `
-        <h2>Booking Rescheduled</h2>
-        <p><strong>Client:</strong> ${booking.name}</p>
-        <p><strong>Service:</strong> ${booking.service}</p>
-        <p><strong>New Time:</strong> ${formattedTime}</p>
-        <p>Please update your schedule accordingly.</p>
-      `,
-    })
+    try {
+      await resend.emails.send({
+        from: 'Barbershop <onboarding@resend.dev>',
+        to: barberEmail,
+        subject: 'Appointment Rescheduled',
+        html: `
+          <h2>Booking Rescheduled</h2>
+          <p><strong>Client:</strong> ${booking.name}</p>
+          <p><strong>Service:</strong> ${booking.service}</p>
+          <p><strong>New Time:</strong> ${formattedTime}</p>
+          <p>Please update your schedule accordingly.</p>
+        `,
+      })
+    } catch (emailError) {
+      console.error('Failed to send barber rescheduling email: ', emailError)
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

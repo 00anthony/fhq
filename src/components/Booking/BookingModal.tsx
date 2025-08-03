@@ -19,7 +19,7 @@ export default function BookingModal({ barberName, onClose, bookingId }: Booking
         >
           ✕
         </button>
-        <BookingForm barberName={barberName} bookingId={bookingId} onSuccess={onClose} />
+        <BookingForm barberName={barberName} bookingId={bookingId} />
       </div>
     </div>
   )

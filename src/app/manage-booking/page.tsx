@@ -1,12 +1,5 @@
-import { Suspense } from 'react'
-import ManageBookingClient from './ManageBookingClient'
+import ManageBookingWrapper from './ManageBookingWrapper'
 
-export const dynamic = 'force-dynamic' // still good to have
-
-export default function ManageBookingPage() {
-  return (
-    <Suspense fallback={<p className="p-4">Loading...</p>}>
-      <ManageBookingClient />
-    </Suspense>
-  )
+export default function Page() {
+  return <ManageBookingWrapper />
 }

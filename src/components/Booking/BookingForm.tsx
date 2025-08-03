@@ -1,5 +1,7 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { useBookingForm } from '@/hooks/useBookingForm'
 import { BarberSelect } from './BarberSelect'
 import { ServiceSelect } from './ServiceSelect'
@@ -12,6 +14,7 @@ import { allBarbers } from '@/data/services';
 import { servicesData } from '@/data/services'
 import { getBarberServiceMap } from "@/lib/utils/barberServiceMap";
 import { getServiceSummary } from '@/lib/utils/serviceSummary'
+import SuccessModal from '../SuccessModal'
 
 
 const services = servicesData.map(s => s.name)
@@ -19,10 +22,9 @@ const services = servicesData.map(s => s.name)
 type BookingFormProps = {
   barberName?: string
   bookingId?: string
-  onSuccess?: () => void
 }
 
-export function BookingForm({ barberName = '', bookingId, onSuccess }: BookingFormProps) {
+export function BookingForm({ barberName = '', bookingId }: BookingFormProps) {
   const {
     formData,
     handleInputChange,
@@ -44,9 +46,25 @@ export function BookingForm({ barberName = '', bookingId, onSuccess }: BookingFo
   } = useBookingForm(barberName, bookingId)
 
   const onSubmit = async (e: React.FormEvent) => {
-    await handleSubmit(e)
-    if (onSuccess) onSuccess()
+    const result = await handleSubmit(e);
+
+    if (result?.success) {
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        router.push(`/manage-booking${result.bookingId ? `?bookingId=${result.bookingId}` : ''}`);
+      }, 2500);
+    } else if (result && !result.success) {
+      // Optional: handle known error cases (e.g. show a message)
+      console.error('Booking failed:', result.error);
+    } else {
+      // result is undefined or unexpected
+      console.error('Booking submit failed without a result.');
+    }
   }
+
+  const router = useRouter()
+  const [showSuccess, setShowSuccess] = useState(false)
 
   const barberServices = getBarberServiceMap();
 
@@ -109,6 +127,13 @@ export function BookingForm({ barberName = '', bookingId, onSuccess }: BookingFo
         service={summaryService}
         date={selectedDateTime}
         time={selectedDateTime}
+      />
+
+      <SuccessModal
+        show={showSuccess}
+        onClose={() => setShowSuccess(false)}
+        message="Your appointment has been booked!"
+        type="booking"
       />
 
       <button

@@ -108,7 +108,7 @@ export function DateTimePickerField({
               type="button"
               onClick={() => handleTimeClick(localDT)}
               aria-pressed={selected?.getTime() === localDT.toJSDate().getTime()}
-              className={`px-3 py-2 rounded-xl border text-sm transition ${
+              className={`px-3 py-2 rounded-xl border text-sm transition cursor-pointer ${
                 selected?.getTime() === localDT.toJSDate().getTime()
                   ? 'bg-red-900 text-white border-gray-300'
                   : 'border-gray-300 text-neutral-300 hover:bg-neutral-900'

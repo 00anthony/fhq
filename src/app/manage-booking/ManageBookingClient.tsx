@@ -2,31 +2,56 @@
 
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import axios from 'axios'
-import { Booking } from '@/types'
+import { DateTimePickerField } from '@/components/Booking/DateTimePickerField'
+import ConfirmModal from '@/components/ConfirmModal'
+import SuccessModal from '@/components/SuccessModal'
+
+type Booking = {
+  id: string
+  name: string
+  email: string
+  phone: string
+  service: string
+  datetime: string
+  barber: string
+  comments?: string
+  timeZone?: string
+}
 
 export default function ManageBookingClient() {
   const searchParams = useSearchParams()
-  const bookingId = searchParams ? searchParams.get('id') : ''
-  const [loading, setLoading] = useState(true)
-  const [booking, setBooking] = useState<Booking | null>(null)
-  const [error, setError] = useState('')
-  const [newDatetime, setNewDatetime] = useState('')
-  const [actionStatus, setActionStatus] = useState('')
-  const [actionLoading, setActionLoading] = useState(false)
-  const [availableSlots, setAvailableSlots] = useState<string[]>([])
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const bookingId = searchParams?.get('bookingId')
 
+  const [booking, setBooking] = useState<Booking | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [selectedDateTime, setSelectedDateTime] = useState<Date | null>(null)
+  const [availableTimes, setAvailableTimes] = useState<{ time: string; barbers: string[] }[]>([])
+  const selectedBarber = booking?.barber || ''
+  const selectedService = booking?.service || ''
+  const [isFetchingTimes, setIsFetchingTimes] = useState(false)
+  const [isRescheduling, setIsRescheduling] = useState(false)
+  const [isCancelling, setIsCancelling] = useState(false)
+  const [modalType, setModalType] = useState<'reschedule' | 'cancel' | null>(null)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
+  const [successType, setSuccessType] = useState<'reschedule' | 'cancel' | 'booking' | null>(null)  
+
+  // 🔄 Fetch booking info
   useEffect(() => {
-    async function fetchBooking() {
-      if (!bookingId) return
+    if (!bookingId) return
+    const fetchBooking = async () => {
       try {
-        const res = await axios.get<Booking>(`/api/bookings?id=${bookingId}`)
-        setBooking(res.data)
-        setSelectedDate(new Date(res.data.datetime)); // <- INIT SELECTED DATE
-      } catch (err) {
-        console.error(err)
-        setError('Booking not found or an error occurred.')
+        const res = await fetch(`/api/bookings?id=${bookingId}`)
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || 'Failed to fetch booking')
+        setBooking(data)
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message)
+        } else {
+          setError('An unknown error occurred')
+        }
       } finally {
         setLoading(false)
       }
@@ -34,159 +59,215 @@ export default function ManageBookingClient() {
     fetchBooking()
   }, [bookingId])
 
+  // 📅 Fetch available time slots
   useEffect(() => {
-    if (!selectedDate) return;
-
+    if (!selectedDateTime || !booking?.barber) return
     const fetchAvailability = async () => {
-      const startOfDay = new Date(selectedDate);
-      const endOfDay = new Date(selectedDate);
-      endOfDay.setHours(23, 59, 59, 999);
+      const start = new Date(selectedDateTime)
+      start.setHours(0, 0, 0, 0)
+      const end = new Date(selectedDateTime)
+      end.setHours(23, 59, 59, 999)
 
-      const params = new URLSearchParams({
-        start: startOfDay.toISOString(),
-        end: endOfDay.toISOString(),
-      });
-
-      const res = await fetch(`/api/calendar/availability?${params}`);
-      const data = await res.json();
-      setAvailableSlots(data.availableSlots || []);
-    };
-
-    fetchAvailability();
-  }, [selectedDate]);
-
-
-
-  const handleCancel = async () => {
-    setActionLoading(true)
-    try {
-      await axios.post('/api/bookings/cancel', { bookingId })
-      setActionStatus('Booking successfully canceled.')
-      setBooking(null)
-    } catch {
-      setActionStatus('Failed to cancel booking.')
-    } finally {
-      setActionLoading(false)
-    }
-  }
-
-  const handleReschedule = async () => {
-    setActionLoading(true)
-    if (!newDatetime || !booking) return
-
-    try {
-      const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const isoDatetime = new Date(newDatetime).toISOString(); // Convert to UTC ISO
-
-      await axios.post('/api/bookings/reschedule', { 
-        bookingId, 
-        newDatetime: isoDatetime,
-        timeZone: userTimeZone
-      });
-      setActionStatus('Booking successfully rescheduled.')
-
-      setBooking({
-        id: booking.id,
-        name: booking.name,
-        email: booking.email,
-        phone: booking.phone,
-        comments: booking.comments,
-        datetime: newDatetime,
-        service: booking.service,
+      const query = new URLSearchParams({
+        start: start.toISOString(),
+        end: end.toISOString(),
         barber: booking.barber,
+        service: booking.service || '',
       })
+
+      setIsFetchingTimes(true)
+      const res = await fetch(`/api/calendar/availability?${query}`)
+      const data = await res.json()
+      setAvailableTimes(
+        data.availableSlots.map((s: { slot: string; barbers: string[] }) => ({
+          time: s.slot,
+          barbers: s.barbers,
+        }))
+      )
+      setIsFetchingTimes(false)
+    }
+    fetchAvailability()
+  }, [selectedDateTime, booking?.barber, booking?.service])
+
+  useEffect(() => {
+    if (booking?.datetime) {
+      setSelectedDateTime(new Date(booking.datetime))
+    }
+  }, [booking])
+
+  // 📤 Reschedule booking
+  const handleReschedule = async () => {
+    if (!selectedDateTime || !bookingId) return alert('Please select a new time.')
+
+    const originalTime = new Date(booking!.datetime).toISOString()
+    const newTime = new Date(selectedDateTime).toISOString()
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
+
+    if (originalTime === newTime) {
+      alert('You have already booked this time.')
+      return
+    }
+
+    setIsRescheduling(true)
+    try {
+      const res = await fetch('/api/bookings/reschedule', {
+        method: 'POST',
+        body: JSON.stringify({ 
+          bookingId, 
+          newDatetime: selectedDateTime,
+          timeZone
+        }),
+        headers: { 'Content-Type': 'application/json' },
+      })
+      const result = await res.json()
+      if (result.success) {
+        setSuccessMessage('Your booking has been rescheduled.')
+        setSuccessType('reschedule')
+        setShowSuccessModal(true)
+      }
+      else alert(result.error || 'Failed to reschedule')
     } catch (err) {
       console.error(err)
-      setActionStatus('Failed to reschedule booking.')
+      alert('Something went wrong')
     } finally {
-      setActionLoading(false)
+      setIsRescheduling(false)
     }
   }
 
-  if (loading) return <p className="p-4">Loading...</p>
-  if (error) return <p className="p-4 text-red-600">{error}</p>
+  // ❌ Cancel booking
+  const handleCancel = async () => {
+    const confirmed = window.confirm('Are you sure you want to cancel this booking?')
+    if (!confirmed) return
+
+    setIsCancelling(true)
+    try {
+      const res = await fetch('/api/bookings/cancel', {
+        method: 'POST',
+        body: JSON.stringify({ bookingId }),
+        headers: { 'Content-Type': 'application/json' },
+      })
+      const result = await res.json()
+      if (result.success) {
+        setSuccessMessage('Your booking has been canceled.')
+        setSuccessType('cancel')
+        setShowSuccessModal(true)
+      }
+      else alert(result.error || 'Failed to cancel')
+    } catch (err) {
+      console.error(err)
+      alert('Something went wrong.')
+    } finally {
+      setIsCancelling(false)
+    }
+  }
+
+
+  if (loading) return <p className='min-h-screen text-center flex items-center justify-center'>Loading...</p>
+  if (error) return <p className="text-red-500">Error: {error}</p>
+  if (!booking) return <p>No booking found.</p>
 
   return (
-    <div className="max-w-md mx-auto p-4 pt-20">
-      <h1 className="text-2xl font-semibold mb-4">Manage Booking</h1>
+    <div className="p-4 max-w-xl mx-auto space-y-6 mt-20">
+      <h1 className="text-2xl ">Manage Your Booking</h1>
 
-      {!booking && actionStatus ? (
-        <p className="text-green-600">{actionStatus}</p>
-      ) : booking ? (
-        <div className="space-y-4">
-          <p><strong>Client:</strong> {booking.name}</p>
-          <p><strong>Barber:</strong> {booking.barber}</p>
-          <p><strong>Service:</strong> {booking.service}</p>
-          <p>
-            <strong>When:</strong>{' '}
-            {new Date(booking.datetime).toLocaleString('en-US', {
-              dateStyle: 'long',
-              timeStyle: 'short',
-              timeZone: booking.timeZone || undefined
-            })} 
-            {booking.timeZone ? ` (${booking.timeZone})` : ''}
-          </p>
+      {/* Booking Details */}
+      <div className="space-y-1 text-sm">
+        <p><strong>Name:</strong> {booking.name}</p>
+        <p><strong>Email:</strong> {booking.email}</p>
+        <p><strong>Phone:</strong> {booking.phone}</p>
+        <p><strong>Service:</strong> {booking.service}</p>
+        <p><strong>Scheduled for: </strong> 
+          {new Date(booking.datetime).toLocaleString('en-US', {
+            dateStyle: 'long',
+            timeStyle: 'short',
+          })}
+          ({booking.timeZone || 'local time'})
+        </p>
+        <p><strong>Barber:</strong> {booking.barber}</p>
+        {booking.comments && <p><strong>Comments:</strong> {booking.comments}</p>}
+      </div>
 
+      {/* Reschedule Section */}
+      <div className="space-y-2">
+        <h2 className="text-lg font-medium">Reschedule</h2>
+        <DateTimePickerField
+          selected={selectedDateTime}
+          onChange={setSelectedDateTime}
+          availableTimes={availableTimes}
+          selectedBarber={selectedBarber}
+          selectedService={selectedService}
+          isLoading={isFetchingTimes}
+        />   
+      </div>
 
-          <div className="border-t pt-4 space-y-2">
-            <label className="block font-medium">New Date:</label>
-            <input
-              type="date"
-              value={selectedDate ? selectedDate.toISOString().split('T')[0] : ''}
-              min={new Date().toISOString().split('T')[0]}
-              max={new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
-              onChange={(e) => {
-                const date = new Date(e.target.value);
-                setSelectedDate(date);
-              }}
-              className="border p-2 rounded w-full"
-            />
-            <select
-              value={newDatetime}
-              onChange={(e) => setNewDatetime(e.target.value)}
-              className="border p-2 rounded w-full mt-2"
-              disabled={!availableSlots.length}
-            >
-              <option value="">Select a new time</option>
-              {availableSlots.map((slot) => (
-                <option key={slot} value={slot}>
-                  {new Date(slot).toLocaleString('en-US', {
-                    dateStyle: 'medium',
-                    timeStyle: 'short',
-                    timeZone: booking.timeZone || undefined,
-                  })}
-                </option>
-              ))}
-            </select>
+      {/*  Buttons */}
+      <div className='flex space-8 justify-evenly'>
+        
+        {/* Cancel Button */}
+        <button
+          onClick={() => setModalType('cancel')}
+          disabled={isCancelling}
+          className="bg-red-900 text-white px-4 py-2 rounded-lg hover:bg-red-800 cursor-pointer"
+        >
+          {isCancelling ? 'Cancelling...' : 'Cancel Booking'}
+        </button>
 
-            {!availableSlots.length && selectedDate && (
-              <p className="text-sm text-red-600">No available times for this date. Please pick another.</p>
-            )}
+        {/* Reschedule Button */}
+        <button
+          onClick={() => setModalType('reschedule')}
+          disabled={isRescheduling}
+          className="bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-600 cursor-pointer"
+        >
+          {isRescheduling ? 'Rescheduling...' : 'Confirm Reschedule'}
+        </button>
+      </div>
+      
 
-            <button
-              disabled={actionLoading || !newDatetime}
-              onClick={handleReschedule}
-              className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:opacity-50"
-            >
-              {actionLoading ? "Rescheduling..." : "Reschedule"}
-            </button>
-          </div>
+      <ConfirmModal
+        isOpen={modalType === 'reschedule'}
+        title="Confirm Reschedule"
+        message={
+          selectedDateTime
+            ? `Are you sure you want to move your appointment to ${new Date(selectedDateTime).toLocaleString()}?`
+            : 'Please select a new time before rescheduling.'
+        }
+        confirmText="Yes, reschedule"
+        cancelText="Go Back"
+        confirmColor="green"
+        onConfirm={() => {
+          setModalType(null)
+          handleReschedule()
+        }}
+        onCancel={() => setModalType(null)}
+        loading={isRescheduling}
+      />
 
-          <button
-            disabled={actionLoading}
-            onClick={handleCancel}
-            className="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700"
-          >
-            {actionLoading ? "Cancelling..." : "Cancel"}
-          </button>
+      <ConfirmModal
+        isOpen={modalType === 'cancel'}
+        title="Cancel Booking"
+        message="Are you sure you want to cancel your booking? This cannot be undone."
+        confirmText="Yes, cancel it"
+        cancelText="Go Back"
+        confirmColor="red"
+        onConfirm={() => {
+          setModalType(null)
+          handleCancel()
+        }}
+        onCancel={() => setModalType(null)}
+        loading={isCancelling}
+      />
 
-          {actionStatus && (
-            <p className={`mt-2 ${actionStatus.includes('Failed') ? 'text-red-600' : 'text-green-600'}`}>
-              {actionStatus}
-            </p>
-          )}
-        </div>
-      ) : null}
+      <SuccessModal
+        show={showSuccessModal}
+        onClose={() => {
+          setShowSuccessModal(false)
+          setSuccessType(null)
+          setSuccessMessage('')
+        }}
+        message={successMessage}
+        type={successType || 'booking'}
+      />
+
     </div>
   )
 }

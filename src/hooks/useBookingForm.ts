@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getBarberServiceMap } from "@/lib/utils/barberServiceMap";
 import { DateTime } from 'luxon'
-import { useRouter } from 'next/navigation'
-
 
 export function useBookingForm(initialBarber = '', bookingId?: string) {
   const [selectedBarber, setSelectedBarber] = useState(initialBarber)
@@ -167,18 +165,18 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
     }
   }, [selectedBarber, selectedService, barberServices])
 
-  const router = useRouter()
-
   // handle submit
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
+    
     if (!formData.name || !formData.email || !selectedDateTime || !selectedService || !selectedBarber) {
-      alert('Please fill out all required fields.')
-      return
+      alert('Please fill out all required fields.');
+      return { success: false, error: 'Missing required fields' };
     }
+    
     if (!availableBarbersForSelectedTime.includes(selectedBarberForTime)) {
-      alert('The selected barber is no longer available for this time. Please choose another time or barber.')
-      return
+      alert('The selected barber is no longer available for this time. Please choose another time or barber.');
+      return { success: false, error: 'Barber not available' };
     }
 
     setLoading(true)
@@ -198,13 +196,15 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
       const result = await res.json()
       
       if (result.success) {
-        const bookingId = result.bookingId // from backend
-        router.push(`/manage-booking${bookingId ? `?bookingId=${bookingId}` : ''}`)
+        return { success: true, bookingId: result.bookingId } 
+      } else {
+        alert('Booking failed: ' + (result.error || 'Unknown error'))
+        return { success: false, error: result.error || 'Unknown error' }
       }
-      else alert('Booking failed: ' + (result.error || 'Unknown error'))
     } catch (err) {
       console.error('Booking failed', err)
       alert('Something went wrong.')
+      return { success: false, error: 'Network error'}
     } finally {
       setLoading(false)
     }
