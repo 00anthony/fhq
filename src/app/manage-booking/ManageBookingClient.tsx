@@ -136,10 +136,8 @@ export default function ManageBookingClient() {
 
   // ❌ Cancel booking
   const handleCancel = async () => {
-    const confirmed = window.confirm('Are you sure you want to cancel this booking?')
-    if (!confirmed) return
-
     setIsCancelling(true)
+    
     try {
       const res = await fetch('/api/bookings/cancel', {
         method: 'POST',
