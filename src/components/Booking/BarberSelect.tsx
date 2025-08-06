@@ -16,7 +16,7 @@ export function BarberSelect({ selected, onChange, barbers, selectedService }: B
         id="barber-select"
         value={selected}
         onChange={(e) => onChange(e.target.value)}
-        className="bg-neutral-800 border border-gray-300 p-2 rounded focus:outline-none transition"
+        className="bg-neutral-800 border border-gray-300 p-2 rounded focus:outline-none transition cursor-pointer"
       >
         <option value="" disabled>Select a Barber</option>
         {barbers.map((name) => {

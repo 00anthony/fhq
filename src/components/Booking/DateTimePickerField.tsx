@@ -74,27 +74,30 @@ export function DateTimePickerField({
   return (
     <div id='date-section' className="flex flex-col space-y-3 scroll-mt-24">
       <label className="text-sm font-medium">Select Date & Time</label>
-      <div className="relative">
-        <DatePicker
-          selected={selected}
-          onChange={handleDateChange}
-          minDate={new Date()}
-          maxDate={new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)}
-          inline
-          calendarClassName="font-sans"
-        />
-        
-        {shouldDisableCalendar && (
-          <div className="absolute inset-0 backdrop-blur-sm flex items-center justify-center z-10 rounded-xl">
-            <p className="text-sm text-gray-500 px-4 text-center">
-              {isMissingBarber && isMissingService
-                ? 'Please select a barber and a service to view available times.'
-                : isMissingBarber
-                ? 'Please select a barber.'
-                : 'Please select a service.'}
-            </p>
-          </div>
-        )}
+
+      <div className="min-w-[20rem] -mx-4 sm:mx-0">
+        <div className="relative overflow-hidden">
+          <DatePicker
+            selected={selected}
+            onChange={handleDateChange}
+            minDate={new Date()}
+            maxDate={new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)}
+            inline
+            calendarClassName="font-sans"
+          />
+
+          {shouldDisableCalendar && (
+            <div className="absolute inset-0 backdrop-blur-sm flex items-center justify-center z-10 rounded-xl pointer-events-auto">
+              <p className="text-sm text-gray-500 px-4 text-center">
+                {isMissingBarber && isMissingService
+                  ? 'Please select a barber and a service to view available times.'
+                  : isMissingBarber
+                  ? 'Please select a barber.'
+                  : 'Please select a service.'}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Available time slots */}

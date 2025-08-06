@@ -42,7 +42,7 @@ export function BarberTimeSelect({
           <select
             value={selectedBarber}
             onChange={(e) => onChange(e.target.value)}
-            className="bg-neutral-800 border border-gray-300 p-2 rounded focus:outline-none transition"
+            className="bg-neutral-800 border border-gray-300 p-2 rounded focus:outline-none transition cursor-pointer"
           >
             {availableBarbers.map((barber) => (
               <option key={barber} value={barber}>

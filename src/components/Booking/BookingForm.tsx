@@ -79,72 +79,81 @@ export function BookingForm({ barberName = '', bookingId }: BookingFormProps) {
   const selectedServiceObject = servicesData.find(s => s.name === selectedService);
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="flex flex-col space-y-4 bg-neutral-800 p-6 rounded-xl shadow-md w-full max-w-md"
-    >
-      <h1 id="booking-form-title" className="text-2xl text-center text-neutral-100">Book Your Appointment</h1>
+    <div className="w-full max-w-5xl mx-auto md:px-4">
+      <form
+        onSubmit={onSubmit}
+        className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-20 bg-neutral-800 p-8 rounded-xl shadow-md"
 
-      <BarberSelect
-        selected={selectedBarber}
-        onChange={setSelectedBarber}
-        barbers={allBarbers}
-        selectedService={selectedService}
-      />
-
-      <ServiceSelect 
-        selected={selectedService} 
-        onChange={setSelectedService} 
-        services={availableServices} 
-        selectedBarber={selectedBarber}
-        disabled={availableServices.length === 0}
-      />
-
-      <DateTimePickerField
-        selected={selectedDateTime}
-        onChange={setSelectedDateTime}
-        availableTimes={availableTimes}
-        selectedBarber={selectedBarber}
-        selectedService={selectedService}
-        isLoading={isFetchingTimes}
-      />
-
-      {availableBarbersForSelectedTime.length > 0 && (
-        <BarberTimeSelect
-          availableBarbers={availableBarbersForSelectedTime}
-          selectedBarber={selectedBarberForTime}
-          onChange={setSelectedBarberForTime}
-          serviceBarbers={selectedServiceObject?.barbers ?? []}
-        />
-      )}
-
-      <ContactFields formData={formData} onChange={handleInputChange} />
-
-      <FileUpload onChange={handleFileChange} error={fileError} />
-
-      <BookingSummary
-        barber={selectedBarber.toLowerCase() === 'any' ? selectedBarberForTime : selectedBarber}
-        service={summaryService}
-        date={selectedDateTime}
-        time={selectedDateTime}
-      />
-
-      <SuccessModal
-        show={showSuccess}
-        onClose={() => setShowSuccess(false)}
-        message="Your appointment has been booked!"
-        type="booking"
-      />
-
-      <button
-        disabled={loading}
-        type="submit"
-        className={`bg-red-900 text-white py-2 rounded-lg hover:bg-red-700 transition font-medium disabled:bg-red-400 ${
-          loading ? 'cursor-not-allowed opacity-50' : ''
-        }`}
       >
-        {loading ? 'Booking...' : 'Confirm Booking'}
-      </button>
-    </form>
+        <h1 id="booking-form-title" className="col-span-full text-3xl text-center text-neutral-100 mb-2">Book Your Appointment</h1>
+
+        {/* LEFT COLUMN */}
+        <div className='col-span-1 flex flex-col space-y-4'>
+          <BarberSelect
+            selected={selectedBarber}
+            onChange={setSelectedBarber}
+            barbers={allBarbers}
+            selectedService={selectedService}
+          />
+
+          <ServiceSelect 
+            selected={selectedService} 
+            onChange={setSelectedService} 
+            services={availableServices} 
+            selectedBarber={selectedBarber}
+            disabled={availableServices.length === 0}
+          />
+
+          <DateTimePickerField
+            selected={selectedDateTime}
+            onChange={setSelectedDateTime}
+            availableTimes={availableTimes}
+            selectedBarber={selectedBarber}
+            selectedService={selectedService}
+            isLoading={isFetchingTimes}
+          />
+
+          {availableBarbersForSelectedTime.length > 0 && (
+            <BarberTimeSelect
+              availableBarbers={availableBarbersForSelectedTime}
+              selectedBarber={selectedBarberForTime}
+              onChange={setSelectedBarberForTime}
+              serviceBarbers={selectedServiceObject?.barbers ?? []}
+            />
+          )}
+        </div>
+        
+        {/* RIGHT COLUMN */}
+        <div className='col-span-1 flex flex-col space-y-4'>
+          <ContactFields formData={formData} onChange={handleInputChange} />
+
+          <FileUpload onChange={handleFileChange} error={fileError} />
+
+          <BookingSummary
+            barber={selectedBarber.toLowerCase() === 'any' ? selectedBarberForTime : selectedBarber}
+            service={summaryService}
+            date={selectedDateTime}
+            time={selectedDateTime}
+          />
+          <button
+            disabled={loading}
+            type="submit"
+            className={`bg-red-900 text-white py-2 rounded-lg hover:bg-red-700 transition font-medium disabled:bg-red-400 cursor-pointer${
+              loading ? 'cursor-not-allowed opacity-50' : ''
+            }`}
+          >
+            {loading ? 'Booking...' : 'Confirm Booking'}
+          </button>
+        </div>
+        
+        <SuccessModal
+          show={showSuccess}
+          onClose={() => setShowSuccess(false)}
+          message="Your appointment has been booked!"
+          type="booking"
+        />
+        
+      </form>
+    </div>
   )
 }

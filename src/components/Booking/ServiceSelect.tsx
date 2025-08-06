@@ -23,7 +23,7 @@ export function ServiceSelect({
         value={selected}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className={`bg-neutral-800 border border-gray-300 p-2 rounded focus:outline-none transition ${
+        className={`bg-neutral-800 border border-gray-300 p-2 rounded focus:outline-none transition cursor-pointer ${
           disabled ? 'opacity-50 cursor-not-allowed' : ''
         }`}
       >

@@ -14,6 +14,10 @@
   border-bottom: none;
   padding-top: 0.5rem;
   text-align: center;
+  width: 100% !important;
+  max-width: 100%;
+  position: relative;
+  overflow: hidden;
 }
 
 .react-datepicker__current-month {
@@ -24,6 +28,10 @@
   color: #ffffff;
   margin-bottom: 0.25rem;
   padding-bottom: 0.25rem;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 h2.react-datepicker__current-month {
@@ -44,6 +52,8 @@ h2.react-datepicker__current-month {
   width: 2.5rem;
   text-align: center;
 }
+
+
 
 /* Days Grid */
 .react-datepicker__month {
@@ -100,7 +110,18 @@ h2.react-datepicker__current-month {
 
 /* Navigation Arrows */
 .react-datepicker__navigation {
-  top: 1rem;
+  z-index: 10;
+  width: 2rem;
+  height: 2rem;
+  top: 0.5rem;
+}
+
+.react-datepicker__navigation--previous {
+  left: 0.5rem;
+}
+
+.react-datepicker__navigation--next {
+  right: 0.5rem;
 }
 
 .react-datepicker__navigation-icon::before {
