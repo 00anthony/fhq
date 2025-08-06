@@ -189,7 +189,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         <h2>Hi ${name}, your booking is confirmed!</h2>
         <p>Thanks for booking a <strong>${service}</strong> with <strong>${barber}</strong>.</p>
         <p><strong>When:</strong> ${formattedTime}</p>
-        <p>You can <a href="https://fhq-two.vercel.app/manage-booking?id=${bookingId}">reschedule or cancel your appointment here</a>.</p>
+        <p>You can <a href="https://fhq-two.vercel.app/manage-booking?bookingId=${bookingId}">reschedule or cancel your appointment here</a>.</p>
         <p>This link is private and allows you to manage your booking. Please don’t share it.</p>
       `,
     })
