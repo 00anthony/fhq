@@ -11,7 +11,10 @@ export default function Home() {
   return (
     <>
       <Hero />
-      <Intro />
+      {/* added bg-color to hide rounded corners */}
+      <div className="bg-gray-100 text-black border-black"> 
+        <Intro />
+      </div>   
       <BookingSection />
     </>
   );

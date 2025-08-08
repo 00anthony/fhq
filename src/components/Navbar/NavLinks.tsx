@@ -15,7 +15,7 @@ const NavLinks = ({ closeMenu }: NavLinksProps) => {
     <nav className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4 text-white">
       <Link
         className="px-4 py-2 font-extrabold text-white hover:text-red-900 flex items-center"
-        href="/#about"
+        href="/about"
         onClick={() => closeMenu?.()}
       >
         About

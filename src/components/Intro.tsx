@@ -1,13 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import SectionHeader from './SectionHeader';
 import Image from 'next/image';
 import { LazyMotion, domAnimation, m } from 'framer-motion';
 
 const Intro = () => {
   return (
-    <section className="bg-gray-100 text-center m-auto p-2 md:p-12 h-5/6" id="about">
+    <section  id="about" className="text-center m-auto p-2 md:p-12 h-5/6">
       <LazyMotion features={domAnimation}>
         <m.div
           className="max-w-5xl mx-auto flex flex-col-reverse lg:flex-row py-8 justify-between"
@@ -34,9 +33,10 @@ const Intro = () => {
             viewport={{ once: true, amount: 0.3 }}
             transition={{ delay: 0.5, duration: 0.6, ease: 'easeOut' }}
           >
-            <SectionHeader title="Welcome to Faded Headquarters" />
+            <h1 className='text-4xl'>Welcome to Faded Headquarters</h1>
+            <div className="mt-4 mx-auto w-24 border-b-4 border-red-900"></div>
 
-            <p className="my-3 text-xl text-black font-semibold">
+            <p className="my-3 text-xl font-semibold">
               We don’t chase trends, we set standards. At Faded HQ, it’s all about precision,
               consistency, and real craftsmanship. No shortcuts, no gimmicks — just clean fades,
               sharp lines, and a barbershop experience that speaks for itself.
@@ -66,14 +66,16 @@ const Intro = () => {
       </LazyMotion>
 
       {/* Wave separator */}
-      <div className="hidden lg:block relative w-full leading-none -mb-28 rotate-180">
-        <svg className="w-full h-24 md:h-32" viewBox="0 0 1440 320" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-          <path
-            fill="#f9fafb"
-            d="M0,160L48,165.3C96,171,192,181,288,192C384,203,480,213,576,197.3C672,181,768,139,864,133.3C960,128,1056,160,1152,165.3C1248,171,1344,149,1392,138.7L1440,128L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"
-          />
-        </svg>
-      </div>
+      {/*
+        <div className="hidden lg:block relative w-full leading-none -mb-28 rotate-180">
+          <svg className="w-full h-24 md:h-32" viewBox="0 0 1440 320" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              fill="#f9fafb"
+              d="M0,160L48,165.3C96,171,192,181,288,192C384,203,480,213,576,197.3C672,181,768,139,864,133.3C960,128,1056,160,1152,165.3C1248,171,1344,149,1392,138.7L1440,128L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"
+            />
+          </svg>
+        </div>
+      */}
     </section>
   );
 };
