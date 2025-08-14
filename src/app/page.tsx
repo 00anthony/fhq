@@ -1,6 +1,6 @@
 import Hero from "@/components/Hero";
 import Intro from "@/components/Intro";
-import BookingSection from "@/components/BookingSection";
+import BarberSection from "@/components/BarberSection";
 
 export const metadata = {
   title: "Ants Booking | Home",
@@ -15,7 +15,7 @@ export default function Home() {
       <div className="bg-gray-100 text-black border-black"> 
         <Intro />
       </div>   
-      <BookingSection />
+      <BarberSection />
     </>
   );
 }

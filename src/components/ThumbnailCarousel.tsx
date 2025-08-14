@@ -5,7 +5,7 @@ import Image from 'next/image';
 
 type ThumbnailCarouselProps = {
   media: { src: string; type?: 'image' | 'video'; poster?: string }[];
-  onSelect?: (idx: number) => void;
+  onSelect?: (idx: number, e?: React.MouseEvent) => void;
 };
 
 const ThumbnailCarousel = ({ media, onSelect }: ThumbnailCarouselProps) => {
@@ -60,12 +60,10 @@ const ThumbnailCarousel = ({ media, onSelect }: ThumbnailCarouselProps) => {
               preload="metadata"
               onClick={(e) => {
                 e.stopPropagation();  // Prevent click from parent container
-                if (onSelect) {
-                  onSelect(idx);
-                }
+                onSelect?.(idx, e);
 
               }}
-              className="h-20 w-28 flex-shrink-0 rounded-lg object-cover cursor-pointer snap-start"
+              className="h-20 w-28 flex-shrink-0 rounded-lg object-cover cursor-pointer snap-start transition-transform duration-600 hover:brightness-80"
             />
           ) : (
             <Image
@@ -77,11 +75,9 @@ const ThumbnailCarousel = ({ media, onSelect }: ThumbnailCarouselProps) => {
               loading="lazy"
               onClick={(e) => {
                 e.stopPropagation();  // Prevent click from parent container
-                if (onSelect) {
-                  onSelect(idx);
-                }
+                onSelect?.(idx, e);
               }}
-              className="h-20 w-28 flex-shrink-0 rounded-lg object-cover cursor-pointer snap-start"
+              className="h-20 w-28 flex-shrink-0 rounded-lg object-cover cursor-pointer snap-start transition-transform duration-600 hover:brightness-80"
             />
           )
         )}
