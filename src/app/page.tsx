@@ -11,11 +11,15 @@ export default function Home() {
   return (
     <>
       <Hero />
-      {/* added bg-color to hide rounded corners */}
-      <div className="bg-gray-100 text-black border-black"> 
+
+      <div className="text-white bg-neutral-900 "> 
         <Intro />
+      </div>
+
+      <div className="bg-neutral-900 bg-gradient-to-b from-transparent to-neutral-950">
+        <BarberSection />
       </div>   
-      <BarberSection />
+      
     </>
   );
 }

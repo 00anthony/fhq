@@ -37,10 +37,10 @@ export const barbers: Barber[] = [
     tiktok: 'https://tiktok.com/@jaythebarber',
     bookLink: 'https://booksy.com/en-us/805700_jj-cutz_barber-shop_36835_kyle#ba_s=sh_1',
     rating: 4.5,
-    reviewCount: 23,
+    reviewCount: 2,
     reviews: [
-      { user: 'Michael S.', rating: 5, comment: 'Best fade I’ve had in years!', date: '2025-08-10' },
-      { user: 'Chris L.', rating: 4, comment: 'Great cut, just wish the wait was shorter.', date: '2025-08-05' },
+      { user: 'Michael U.', rating: 5, comment: 'Best fade I’ve had in years!', date: '2025-08-10' },
+      { user: 'Chris K.', rating: 4, comment: 'Great cut, just wish the wait was shorter.', date: '2025-08-05' },
     ]
   },
   {
@@ -55,7 +55,7 @@ export const barbers: Barber[] = [
     tiktok: 'https://tiktok.com/@mannyfades',
     bookLink: 'https://booksy.com/en-us/1412622_los-cutzz_barber-shop_36835_kyle#ba_s=sh_1',
     rating: 5,
-    reviewCount: 41,
+    reviewCount: 2,
     reviews: [
       { user: 'Daniel P.', rating: 5, comment: 'Los always kills it with the taper!', date: '2025-08-08' },
       { user: 'Brandon T.', rating: 5, comment: 'Crisp lines and great convo.', date: '2025-08-03' },
@@ -74,7 +74,7 @@ export const barbers: Barber[] = [
     tiktok: 'https://tiktok.com/@samanthacuts',
     bookLink: 'https://booksy.com/en-us/1265933_nelson-blendzzz_hair-salon_36835_kyle#ba_s=sgr_1',
     rating: 4.3,
-    reviewCount: 18,
+    reviewCount: 2,
     reviews: [
       { user: 'Alex R.', rating: 4, comment: 'Solid work, very clean cut.', date: '2025-08-06' },
       { user: 'Kevin D.', rating: 5, comment: 'Fade on point every time.', date: '2025-08-02' },

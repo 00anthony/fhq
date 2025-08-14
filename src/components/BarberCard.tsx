@@ -73,8 +73,7 @@ const BarberCard = ({
         {/* ------------ Footer content (non-link actions) ------------ */}
 
         <div 
-          className="absolute bottom-0 w-full px-4 pb-4 pt-24 bg-gradient-to-t from-white/70 flex flex-col items-center group/thumbs"
-          onClick={(e) => e.stopPropagation()} // prevent link navigation
+          className="absolute bottom-0 w-full px-4 pb-4 pt-24 bg-gradient-to-t from-neutral-950 flex flex-col items-center group/thumbs"
         >
           <ThumbnailCarousel
             media={barber.workPics}
@@ -102,15 +101,18 @@ const BarberCard = ({
               className="text-black hover:text-gray-800"
               onClick={(e) => e.stopPropagation()}
             >
-              <FaTiktok />
+              <FaTiktok className='text-white'/>
             </a>
             
             {/* ⭐ Star rating and review count */}
-            <StarRating
-              rating={barber.rating}
-              reviewCount={barber.reviewCount}
-              onReviewClick={() => setShowReviews(true)}
-            />
+            <div onClick={(e) => e.stopPropagation()}>
+              <StarRating
+                rating={barber.rating}
+                reviewCount={barber.reviewCount}
+                onReviewClick={() => setShowReviews(true)}
+              />
+            </div>
+            
           </div>
 
           {/* BOOK NOW BUTTON */}
@@ -118,7 +120,7 @@ const BarberCard = ({
             href={barber.bookLink} 
             target="_blank" 
             rel="noopener noreferrer"
-            className="bg-black text-white font-semibold py-2 px-6 rounded-2xl hover:bg-neutral-900 transition"
+            className="bg-neutral-100 text-black font-semibold py-2 px-6 rounded-2xl hover:bg-white transition"
             onClick={(e) => e.stopPropagation()}
           >
             Book Now
