@@ -36,7 +36,6 @@ const BarberCard = ({
     setSelectedIdx((i) => (i !== null ? (i < barber.workPics.length - 1 ? i + 1 : 0) : 0));
 
   const router = useRouter();
-  const barberSlug = barber.name.trim().toLowerCase().replace(/\s+/g, '-');
 
   return (
     <>
@@ -44,7 +43,7 @@ const BarberCard = ({
         aria-label={`View ${barber.name}'s profile`}
         className="group relative w-full max-w-lg h-[550px] rounded-2xl shadow-lg overflow-hidden transition-transform duration-300 hover:scale-105 focus:scale-105 cursor-pointer"
         tabIndex={0}
-        onClick={() => router.push(`/barbers/${barberSlug}`)}
+        onClick={() => router.push(`/barbers/${barber.slug}`)}
       >
         <Image
           src={barber.profilePic}
