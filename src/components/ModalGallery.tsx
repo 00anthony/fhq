@@ -110,13 +110,13 @@ export default function ModalGallery({
             </button>
             <button
               onClick={showPrev}
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 text-white rounded-full px-3 py-1 hover:bg-black/80"
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 text-white rounded-full px-3 py-1 hover:bg-black/80 cursor-pointer"
             >
               <span className="relative -top-0.5 text-3xl leading-none">‹</span>
             </button>
             <button
               onClick={showNext}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 text-white rounded-full px-3 py-1 hover:bg-black/80"
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 text-white rounded-full px-3 py-1 hover:bg-black/80 cursor-pointer"
             >
               <span className="relative -top-0.5 text-3xl leading-none">›</span>
             </button>
