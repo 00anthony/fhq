@@ -82,10 +82,11 @@ export function BookingForm({ barberName = '', bookingId }: BookingFormProps) {
     <div className="w-full max-w-5xl mx-auto md:px-4">
       <form
         onSubmit={onSubmit}
-        className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-20 bg-neutral-800 p-8 rounded-xl shadow-md"
+        className="grid grid-cols-1 md:grid-cols-2 gap-x-20 bg-neutral-800 p-8 rounded-xl shadow-md"
 
       >
-        <h1 id="booking-form-title" className="col-span-full text-3xl text-center text-neutral-100 mb-2">Book Your Appointment</h1>
+        <h1 id="booking-form-title" className="col-span-full text-4xl uppercase text-center text-neutral-100 mb-2">Book Your Appointment</h1>
+        <div className="col-span-full mb-8 mx-auto w-24 border-b-4 border-red-900"></div>
 
         {/* LEFT COLUMN */}
         <div className='col-span-1 flex flex-col space-y-4'>
