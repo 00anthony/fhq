@@ -32,8 +32,8 @@ export default function GalleryGrid({ items, barbers }: GalleryGridProps) {
   return (
     <section className="py-20 bg-neutral-950 text-white min-h-screen">
       <div className="max-w-6xl mx-auto px-4 py-8">
-        <h1 className="text-4xl text-center">Gallery</h1>
-        <div className="my-4 pb-4 mx-auto w-32 border-t-4 border-white"></div>
+        <h1 className="text-4xl text-center uppercase">Gallery</h1>
+        <div className="mt-4 mb-8 mx-auto w-24 border-b-4 border-red-900"></div>
 
         {/* Filters Container */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-10">

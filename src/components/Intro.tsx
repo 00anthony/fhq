@@ -9,7 +9,7 @@ const Intro = () => {
     <section  id="about" className="text-center m-auto p-2 md:p-12 h-5/6">
       <LazyMotion features={domAnimation}>
         <m.div
-          className="max-w-5xl mx-auto flex flex-col-reverse lg:flex-row py-8 justify-between"
+          className="max-w-5xl mx-auto flex flex-col-reverse lg:flex-row justify-between"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}

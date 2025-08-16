@@ -8,12 +8,12 @@ const BarberSection = () => {
   return (
     <LazyMotion features={domAnimation}>
       <section
-        className="py-16 px-4 sm:px-6 lg:px-8 space-y-8 "
-        id="booking"
-        aria-labelledby="booking-heading"
+        className="py-8 px-4 sm:px-6 lg:px-8 space-y-8 "
+        id="barbers"
+        aria-labelledby="barbers-heading"
       >
         <m.div
-          id="booking-heading"
+          id="barber-heading"
           initial={{ opacity: 0, scale: 0.9 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true, amount: 0.6 }}
