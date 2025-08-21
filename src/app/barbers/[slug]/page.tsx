@@ -1,15 +1,26 @@
-'use client';
-
-import { notFound, useParams } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { barbers, Barber } from '@/data/barbers'; // adjust path if needed
 import BarberCard from '@/components/BarberCard';
 import GallaryGrid from '@/components/GallaryGrid';
 import ReviewGrid from '@/components/ReviewGrid';
-import { LazyMotion, domAnimation, m } from 'framer-motion';
 
-export default function BarberPage() {
-  const params = useParams() 
-  const slug = params?.slug;
+
+// ✅ Updated type for Next.js 15 - params is now a Promise
+type PageProps = {
+  params: Promise<{
+    slug: string;
+  }>;
+};
+
+// ✅ Generate all barber slugs at build time
+export async function generateStaticParams() {
+  return barbers.map((barber) => ({
+    slug: barber.slug,
+  }));
+}
+
+export default async function BarberPage({ params }: PageProps) {
+  const { slug } = await params;
 
   if (!slug) return notFound();
 
@@ -20,18 +31,13 @@ export default function BarberPage() {
   return (
     <div className='bg-neutral-950 py-20 px-6'>
       {/* Header */}
-      <LazyMotion features={domAnimation}>
-        <m.div
+        <div
           id="barber-heading"
-          initial={{ opacity: 0, scale: 0.9 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true, amount: 0.6 }}
-          transition={{ delay: 0.5, duration: 0.6, ease: 'easeOut' }}
+          className=''
         >
           <h1 className='text-4xl text-white uppercase text-center'>{barber.name}</h1>
           <div className="mt-4 mx-auto w-24 border-b-4 border-red-900"></div>
-        </m.div>
-      </LazyMotion>
+        </div>
 
       <div className="max-w-6xl mx-auto py-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
 
