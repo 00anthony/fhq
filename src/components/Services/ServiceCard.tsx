@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import ExpandedServiceContent from "@/components/Services/ExpandedServiceContent";
 import { Service } from "@/types/services";
@@ -62,12 +63,13 @@ export default function ServiceCard({
 
       <div className="mt-4 flex justify-between items-center">
         <span className="text-lg font-bold">{priceDisplay}</span>
-        <button
+        <Link
+          href="/booking"
           onClick={(e) => e.stopPropagation()} // Prevent toggle on button click
           className="border border-neutral-700 text-gray-300 hover:text-white hover:border-b-gray-600 duration-300 px-4 py-2 rounded-lg transition"
         >
           Book Now
-        </button>
+        </Link>
       </div>
 
       <AnimatePresence>

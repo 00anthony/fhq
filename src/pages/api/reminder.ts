@@ -39,6 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Format the appointment date and time in a readable way
       const appointmentDate = new Date(booking.datetime);
       const formattedDateTime = appointmentDate.toLocaleString('en-US', {
+        timeZone: 'America/Chicago', // This covers both CDT and CST automatically
         weekday: 'long',  // e.g., "Monday"
         month: 'long',    // e.g., "July"
         day: 'numeric',   // e.g., "21"

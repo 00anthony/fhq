@@ -103,7 +103,7 @@ const Hero = () => {
         />
 
         <Link
-          href="/#booking"
+          href="/booking"
           className="relative z-10 font-gotisch text-white bg-red-900/50 backdrop-blur-sm hover:bg-red-900 inline-flex items-center justify-center px-6 py-2 -mt-12 md:-mt-28 md:text-2xl text-lg shadow-xl rounded-2xl sm:w-auto sm:mb-0 group transition duration-300 ease-in-out"
         >
           book haircut
