@@ -6,6 +6,7 @@ export const servicesData: Service[] = [
   { 
     id: 1, 
     name: "Haircut", 
+    duration: 45, //minutes
     category: ["Hair"], 
     barbers: [
       { name: "Jay", price: 30, duration: "30 min" },
@@ -22,6 +23,7 @@ export const servicesData: Service[] = [
   { 
     id: 2, 
     name: "Beard Trim", 
+    duration: 30, //minutes
     category: ["Beard"], 
     barbers: [
       { name: "Jay", price: 20, duration: "15 min" }
@@ -37,6 +39,7 @@ export const servicesData: Service[] = [
   {
     id: 3,
     name: "Hair + Beard",
+    duration: 45, //minutes
     category: ["Combo", "Hair", "Beard"],
     barbers: [
       { name: "Luis", price: 50, duration: "50 min" },
@@ -53,6 +56,7 @@ export const servicesData: Service[] = [
   { 
     id: 4, 
     name: "Haircut & Design", 
+    duration: 45, //minutes
     category: ["Hair", "Style & Care"], 
     barbers: [
       { name: "Luis", price: 45, duration: "50 min" },
@@ -69,6 +73,7 @@ export const servicesData: Service[] = [
   { 
     id: 5, 
     name: "Deluxe Haircut", 
+    duration: 60, //minutes
     category: ["Hair", "Style & Care"], 
     barbers: [
       { name: "Luis", price: 60, duration: "50 min" },
@@ -84,6 +89,7 @@ export const servicesData: Service[] = [
   { 
     id: 6, 
     name: "Consultation", 
+    duration: 0, //minutes
     category: ["Style & Care", "Hair", "Beard", "Combo"], 
     barbers: [
       { name: "Luis", price: 0, duration: "30 min" },
