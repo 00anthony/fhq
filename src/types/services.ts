@@ -16,6 +16,7 @@ export type Media = {
 export type Service = {
   id: number;
   name: string;
+  duration: number; //minutes
   barbers: BarberOption[];
   category?: string[];
   description?: string;

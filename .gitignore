@@ -45,7 +45,11 @@ server/credentials/service-account.json
 
 # Ignore credential files
 server/credentials/
+
 *.json
+
+# Exceptions for .json files
+!vercel.json
 !/public/lottie/success.json
 
 /src/generated/prisma

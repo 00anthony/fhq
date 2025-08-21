@@ -1,0 +1,21 @@
+{
+  "_comment": "cleanup runs every hour & reminder every 5 minutes",
+  "crons": [
+    {
+      "path": "/api/calendar/cleanup",
+      "schedule": "0 */1 * * *"
+    },
+    {
+      "path": "/api/reminder",
+      "schedule": "*/5 * * * *"
+    }
+  ],
+  "functions": {
+    "pages/api/calendar/cleanup.js": {
+      "maxDuration": 300
+    },
+    "pages/api/reminder.js": {
+      "maxDuration": 60
+    }
+  }
+}
