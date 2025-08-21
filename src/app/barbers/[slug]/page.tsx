@@ -39,7 +39,7 @@ export default async function BarberPage({ params }: PageProps) {
           <div className="mt-4 mx-auto w-24 border-b-4 border-red-900"></div>
         </div>
 
-      <div className="max-w-6xl mx-auto py-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-6xl mx-auto py-6 grid grid-cols-1 lg:grid-cols-3 sm:gap-8">
 
         {/* Left Sidebar */}
         <div className="col-span-1 space-y-6">
@@ -49,14 +49,14 @@ export default async function BarberPage({ params }: PageProps) {
 
           {/* Bio */}
           <section>
-            <h2 className="text-xl mb-2">About Me</h2>
+            <h2 className="text-2xl mb-2">About Me</h2>
             <p className="text-gray-400 mt-2">{barber.bio}</p>
 
           </section>
 
           {/* Skills */}
           <section>
-            <h2 className="text-xl mb-2">Skills</h2>
+            <h2 className="text-2xl mb-2">Skills</h2>
             <ul className="list-disc list-inside text-gray-400">
               {barber.skills.map(skill => (
                 <li key={skill}>{skill}</li>
@@ -66,7 +66,7 @@ export default async function BarberPage({ params }: PageProps) {
 
           {/* Achievements */}
           <section>
-            <h2 className="text-xl mb-2">Achievements</h2>
+            <h2 className="text-2xl mb-2">Achievements</h2>
             <ul className="list-disc list-inside text-gray-400">
               {barber.achievements.map(ach => (
                 <li key={ach}>{ach}</li>
@@ -80,7 +80,7 @@ export default async function BarberPage({ params }: PageProps) {
         <div className="col-span-2 space-y-8">
           {/* Experience */}
           <section>
-            <h2 className="text-2xl mb-2">Experience</h2>
+            <h2 className="text-2xl mb-2 mt-6 sm:mt-0">Experience</h2>
             <p className="text-gray-400">{barber.experience}</p>
           </section>
 
