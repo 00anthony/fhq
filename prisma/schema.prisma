@@ -14,21 +14,24 @@ datasource db {
 }
 
 model Booking {
-  id          String   @id @default(uuid())
-  eventId     String
-  calendarId  String
-  barber      String
-  name        String
-  email       String
-  phone       String
-  comments    String?
-  service     String
-  datetime    DateTime  // Appointment time in UTC
-  timeZone    String    // User's original timezone
-  createdAt   DateTime  @default(now())
-  reminderSent  Boolean  @default(false)
+  id              String    @id @default(uuid())
+  eventId         String
+  calendarId      String
+  barber          String
+  name            String
+  email           String
+  phone           String
+  comments        String?
+  service         String
+  serviceDuration Int?      // Duration of the service in minutes
+  datetime        DateTime  // Appointment time in UTC
+  timeZone        String    // User's original timezone
+  createdAt       DateTime  @default(now())
+  reminderSent    Boolean   @default(false)
+  eventDeleted    Boolean   @default(false) // Whether the calendar event has been deleted
+  deletedAt       DateTime? // When the calendar event was deleted
 
   @@index([email])
   @@index([datetime])
+  @@index([eventDeleted, datetime]) // Index for cleanup queries
 }
-
