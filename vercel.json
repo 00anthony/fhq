@@ -10,10 +10,10 @@
     }
   ],
   "functions": {
-    "pages/api/calendar/cleanup.js": {
+    "api/calendar/cleanup.js": {
       "maxDuration": 300
     },
-    "pages/api/reminder.js": {
+    "api/reminder.js": {
       "maxDuration": 60
     }
   }
