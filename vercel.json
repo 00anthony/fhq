@@ -1,5 +1,4 @@
 {
-  "_comment": "cleanup runs every hour & reminder every 5 minutes",
   "crons": [
     {
       "path": "/api/calendar/cleanup",
