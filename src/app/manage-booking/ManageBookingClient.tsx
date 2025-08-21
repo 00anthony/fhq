@@ -166,7 +166,11 @@ export default function ManageBookingClient() {
 
   return (
     <div className="p-4 max-w-xl mx-auto space-y-6 mt-20">
-      <h1 className="text-2xl ">Manage Your Booking</h1>
+      <h1 id="booking-form-title" className="text-4xl uppercase text-center text-neutral-100 mb-2">Manage Your Appointment</h1>
+      <p className="text-sm text-gray-300 text-center ">Review, reschedule, or cancel below</p>
+      <div className="col-span-full mb-8 mx-auto w-24 border-b-4 border-red-900"></div>
+
+      
 
       {/* Booking Details */}
       <div className="space-y-1 text-sm">
