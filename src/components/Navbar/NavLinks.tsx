@@ -1,7 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { useSession, signIn, signOut } from 'next-auth/react';
+import { barbers } from '@/data/barbers';
 
 type NavLinksProps = {
   closeMenu?: () => void;
@@ -9,43 +12,134 @@ type NavLinksProps = {
 
 const NavLinks = ({ closeMenu }: NavLinksProps) => {
   const { data: session } = useSession();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const pathname = usePathname();
   console.log(session);
+
+  const handleDropdownToggle = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
+  const handleLinkClick = () => {
+    setIsDropdownOpen(false);
+    closeMenu?.();
+  };
+
+  // Helper function to check if link is active
+  const isActiveLink = (href: string) => {
+    if (!pathname) return false;
+    if (href === '/barbers') {
+      return pathname === '/barbers' || pathname.startsWith('/barbers/');
+    }
+    return pathname === href;
+  };
 
   return (
     <nav className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4 text-white">
       <Link
-        className="px-4 py-2 font-extrabold text-white hover:text-red-900 flex items-center"
+        className={`px-4 py-2 font-extrabold flex items-center transition-colors duration-200 ${
+          isActiveLink('/about') 
+            ? 'text-red-900 border-b-2 border-red-900' 
+            : 'text-white hover:text-red-900'
+        }`}
         href="/about"
-        onClick={() => closeMenu?.()}
+        onClick={handleLinkClick}
       >
         About
       </Link>
       <Link
-        className="px-4 py-2 font-extrabold text-white hover:text-red-900 flex items-center"
+        className={`px-4 py-2 font-extrabold flex items-center transition-colors duration-200 ${
+          isActiveLink('/services') 
+            ? 'text-red-900 border-b-2 border-red-900' 
+            : 'text-white hover:text-red-900'
+        }`}
         href="/services"
-        onClick={() => closeMenu?.()}
+        onClick={handleLinkClick}
       >
         Services
       </Link>
       <Link
-        className="px-4 py-2 font-extrabold text-white hover:text-red-900 flex items-center"
+        className={`px-4 py-2 font-extrabold flex items-center transition-colors duration-200 ${
+          isActiveLink('/gallery') 
+            ? 'text-red-900 border-b-2 border-red-900' 
+            : 'text-white hover:text-red-900'
+        }`}
         href="/gallery"
-        onClick={() => closeMenu?.()}
+        onClick={handleLinkClick}
       >
         Gallery
       </Link>
 
+      {/* Barbers Dropdown */}
+      <div className="relative group">
+        <button
+          className={`px-4 py-2 font-extrabold flex items-center gap-1 transition-colors duration-200 ${
+            isActiveLink('/barbers') 
+              ? 'text-red-900 border-b-2 border-red-900' 
+              : 'text-white hover:text-red-900'
+          }`}
+          onClick={handleDropdownToggle}
+          onMouseEnter={() => setIsDropdownOpen(true)}
+        >
+          Barbers
+          <svg
+            className={`w-4 h-4 transition-transform duration-200 ${
+              isDropdownOpen ? 'rotate-180' : ''
+            }`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        
+        {/* Dropdown Menu */}
+        <div
+          className={`absolute top-full left-0 mt-1 bg-neutral-950/90 backdrop-blur border border-neutral-700 rounded-lg shadow-xl z-50 min-w-48 transition-all duration-200 ${
+            isDropdownOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-2'
+          }`}
+          onMouseLeave={() => setIsDropdownOpen(false)}
+        >
+          {/* View All Barbers */}
+          <Link
+            href="/barbers"
+            className={`block px-4 py-3 font-semibold border-b border-neutral-700 transition-colors duration-150 ${
+              pathname === '/barbers'
+                ? 'text-red-900 '
+                : 'text-white hover:text-red-900 '
+            }`}
+            onClick={handleLinkClick}
+          >
+            View All Barbers
+          </Link>
+          
+          {/* Individual Barbers */}
+          {barbers.map((barber) => (
+            <Link
+              key={barber.slug}
+              href={`/barbers/${barber.slug}`}
+              className={`block px-4 py-3 transition-colors duration-150 ${
+                pathname === `/barbers/${barber.slug}`
+                  ? 'text-red-900 '
+                  : 'text-gray-300 hover:text-red-900 '
+              }`}
+              onClick={handleLinkClick}
+            >
+              {barber.name}
+            </Link>
+          ))}
+        </div>
+      </div>
+
       <Link
-        className="px-4 py-2 font-extrabold text-white hover:text-red-900 flex items-center"
-        href="/barbers"
-        onClick={() => closeMenu?.()}
-      >
-        Barbers
-      </Link>
-      <Link
-        className="font-bold text-white bg-red-900/50 backdrop-blur-sm inline-flex items-center justify-center w-auto px-6 py-3 shadow-xl rounded-xl transition-all duration-300 hover:bg-red-900"
+        className={`text-white backdrop-blur-sm px-6 py-3 font-extrabold flex items-center justify-center w-auto shadow-xl rounded-xl transition-colors duration-200 ${
+          isActiveLink('/booking') 
+            ? 'bg-red-900 ' 
+            : 'bg-red-900/50 hover:bg-red-900'
+        }`}
         href="/booking"
-        onClick={() => closeMenu?.()}
+        onClick={handleLinkClick}
       >
         Get Faded
       </Link>
@@ -81,7 +175,7 @@ const NavLinks = ({ closeMenu }: NavLinksProps) => {
         aria-label={session ? 'Sign Out' : 'Sign In with Google'}
       >
         {session ? (
-          // filled profile icon
+          // filled profile icon (logged in)
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -97,7 +191,7 @@ const NavLinks = ({ closeMenu }: NavLinksProps) => {
             <path d="M4 20c0-3 3.6-5.5 8-5.5s8 2.5 8 5.5v1H4v-1z" />
           </svg>
         ) : (
-          // Profile icon outline
+          // Profile icon outline (logged out)
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -114,9 +208,6 @@ const NavLinks = ({ closeMenu }: NavLinksProps) => {
             {/* Shoulders */}
             <path d="M4 20c0-3 3.6-5.5 8-5.5s8 2.5 8 5.5v1H4v-1z" />
           </svg>
-
-
-
         )}
       </button>
     </nav>

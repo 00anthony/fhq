@@ -7,15 +7,15 @@ import SpinningLogo from './NewSpinningLogo';
 
 const NavBar = () => {
     
-    const [top, setTop] = useState(true); //const [top, setTop] = useState(!window.scrollY);
-    const [isOpen, setIsOpen] = useState(false); //const [isOpen, setisOpen] = React.useState(false);
+    const [top, setTop] = useState(true); 
+    const [isOpen, setIsOpen] = useState(false); 
     
-    const handleClick = () => setIsOpen(!isOpen); //function handleClick() { setisOpen(!isOpen); }
+    const handleClick = () => setIsOpen(!isOpen); 
                                                         
 
     useEffect(() => {
       const scrollHandler = () => {
-        setTop(window.pageYOffset <= 10);//window.pageYOffset > 10 ? setTop(false) : setTop(true)
+        setTop(window.pageYOffset <= 10);
       };
       window.addEventListener('scroll', scrollHandler);
       return () => window.removeEventListener('scroll', scrollHandler);
@@ -59,7 +59,7 @@ const NavBar = () => {
                 </div>
 
                 <div
-                    className={`fixed top-0 left-0 h-screen w-full z-30 backdrop-blur-md bg-white/30 shadow-xl transition-all duration-300 ease-in-out lg:hidden
+                    className={`fixed top-0 left-0 h-screen w-full z-30 bg-neutral-900/50 backdrop-blur-md shadow-xl transition-all duration-300 ease-in-out lg:hidden
                         ${isOpen ? 'translate-y-0 opacity-100 pointer-events-auto' : 'translate-y-full opacity-0 pointer-events-none'}
                     `}
                 >
