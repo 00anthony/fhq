@@ -7,6 +7,7 @@ import { PrismaClient } from '@prisma/client'
 import auth from '@/lib/google-auth'
 import resend from '@/lib/resend'
 import { DateTime } from 'luxon';
+import { servicesData } from '@/data/services' // Import services data
 
 // Disable Next.js default body parser to handle FormData
 export const config = {
@@ -54,6 +55,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'Missing fields' })
   }
 
+  // Get service duration from services data
+  const serviceData = servicesData.find(s => s.name === service);
+  if (!serviceData) {
+    return res.status(400).json({ error: 'Invalid service selected' });
+  }
+  
+  const serviceDurationMinutes = serviceData.duration || 30; // fallback to 30 minutes
+  console.log(`📅 Service "${service}" duration: ${serviceDurationMinutes} minutes`);
+
   // Handle uploaded file (optional)
   let attachment = null;
   const file = files.upload;
@@ -100,7 +110,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         bookingId
       });
 
-
       console.log('📅 Fetching availability from:', `${req.headers.origin}/api/calendar/availability?start=${startOfDay}&end=${endOfDay}&bookingId=${bookingId || ''}&barber=${encodeURIComponent(barber)}&service=${encodeURIComponent(service)}`)
 
       const availabilityData = await response.json();
@@ -115,7 +124,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         console.log('Matches Time?', DateTime.fromISO(s.slot).toMillis() === userDateTime.toMillis());
       });
 
-
       const isAvailable = availableSlots.some((slotObj) => {
         console.log('🔍 Checking against slots:', availableSlots.length)
         console.log('⏰ Selected:', userDateTime.toISO(), userDateTime.toMillis())
@@ -124,14 +132,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return (
           slotObj.barbers.includes(barber) &&
           DateTime.fromISO(slotObj.slot).toMillis() === userDateTime.toMillis()
-          
         )
       })
 
-
       console.log('🔍 Available slots:', availableSlots)
       console.log('⏰ Selected:', userDateTime.toUTC().toISO())
-
 
       if (!isAvailable) {
         return res.status(400).json({ error: 'Selected time is no longer available.' });
@@ -143,7 +148,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const utcDateTime = userDateTime.toUTC();
     const eventStart = utcDateTime.toISO();
-    const eventEnd = utcDateTime.plus({ minutes: 30 }).toISO();
+    // ✅ Use actual service duration with buffer time
+    const bufferMinutes = 0; 
+    const eventEnd = utcDateTime.plus({ minutes: serviceDurationMinutes + bufferMinutes }).toISO();
+
+    console.log(`📅 Creating calendar event from ${eventStart} to ${eventEnd} (${serviceDurationMinutes} minutes)`);
 
     // ✅ Setup Google Calendar
     const calendar = google.calendar({ version: 'v3', auth });
@@ -160,7 +169,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       calendarId,
       requestBody: {
         summary: `${service} with ${barber}`,
-        description: `Name: ${name}\nPhone: ${phone}\n\n${comments}`,
+        description: `Name: ${name}\nPhone: ${phone}\nDuration: ${serviceDurationMinutes} minutes\n\n${comments}`,
         start: { dateTime: eventStart, timeZone },
         end: { dateTime: eventEnd, timeZone },
       },
@@ -170,6 +179,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // ✅ Format email time in user's timezone
     const formattedTime = userDateTime.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY);
+    const formattedEndTime = userDateTime.plus({ minutes: serviceDurationMinutes }).toLocaleString(DateTime.TIME_SIMPLE);
 
     // ✅ Barber email map
     const barberEmails: Record<string, string> = {
@@ -180,7 +190,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const barberEmail = barberEmails[barber] || 'fallback@barbershop.com'
 
-    // Send client confirmation email
+    // Send client confirmation email with duration info
     await resend.emails.send({
       from: 'Barbershop <onboarding@resend.dev>',
       to: email,
@@ -188,13 +198,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       html: `
         <h2>Hi ${name}, your booking is confirmed!</h2>
         <p>Thanks for booking a <strong>${service}</strong> with <strong>${barber}</strong>.</p>
-        <p><strong>When:</strong> ${formattedTime}</p>
+        <p><strong>When:</strong> ${formattedTime} - ${formattedEndTime}</p>
+        <p><strong>Duration:</strong> ${serviceDurationMinutes} minutes</p>
         <p>You can <a href="https://fhq-two.vercel.app/manage-booking?bookingId=${bookingId}">reschedule or cancel your appointment here</a>.</p>
-        <p>This link is private and allows you to manage your booking. Please don’t share it.</p>
+        <p>This link is private and allows you to manage your booking. Please don't share it.</p>
       `,
     })
 
-    // Send barber notification email (with optional attachment)
+    // Send barber notification email (with optional attachment and duration info)
     await resend.emails.send({
       from: 'Barbershop <onboarding@resend.dev>',
       to: barberEmail,
@@ -203,14 +214,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         <h2>New Appointment Booked</h2>
         <p><strong>Client:</strong> ${name}</p>
         <p><strong>Service:</strong> ${service}</p>
-        <p><strong>When:</strong> ${formattedTime}</p>
+        <p><strong>When:</strong> ${formattedTime} - ${formattedEndTime}</p>
+        <p><strong>Duration:</strong> ${serviceDurationMinutes} minutes</p>
         <p><strong>Phone:</strong> ${phone}</p>
         <p><strong>Notes:</strong> ${comments || 'None'}</p>
       `,
       attachments: attachment ? [attachment] : [],
     })
 
-    // ✅ Save booking in DB (UTC datetime + user timezone)
+    // ✅ Save booking in DB (UTC datetime + user timezone + service duration)
     await prisma.booking.create({
       data: {
         id: bookingId,
@@ -222,12 +234,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         phone,
         comments,
         service,
+        serviceDuration: serviceDurationMinutes,
         datetime: utcDateTime.toJSDate(), // Store in UTC
         timeZone, // New field
+        // Consider adding serviceDuration field to your Booking model
+        // serviceDuration: serviceDurationMinutes,
       },
     });
 
-    return res.status(200).json({ success: true, eventId: event.data.id, bookingId })
+    return res.status(200).json({ 
+      success: true, 
+      eventId: event.data.id, 
+      bookingId,
+      serviceDuration: serviceDurationMinutes // Include in response
+    })
   } catch (error) {
     console.error('Booking error:', error)
     return res.status(500).json({ error: 'Failed to book appointment' })
