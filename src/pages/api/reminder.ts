@@ -28,10 +28,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const now = new Date();
-    // Changed: Use 24-hour reminder window instead of 30 minutes
-    // This is better for appointment reminders (day-before notification)
-    const reminderStart = new Date(now.getTime() + 23.5 * 60 * 60 * 1000); // 23.5 hours from now
-    const reminderEnd = new Date(now.getTime() + 24.5 * 60 * 60 * 1000);   // 24.5 hours from now
+    // For GitHub Actions (every 5 minutes): Use 24-hour reminder with wider window
+    // to ensure we don't miss appointments between runs
+    const reminderStart = new Date(now.getTime() + 23 * 60 * 60 * 1000); // 23 hours from now
+    const reminderEnd = new Date(now.getTime() + 25 * 60 * 60 * 1000);   // 25 hours from now
 
     console.log(`[REMINDER] Checking for bookings between ${reminderStart.toISOString()} and ${reminderEnd.toISOString()}`);
 

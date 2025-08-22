@@ -2,19 +2,12 @@
   "crons": [
     {
       "path": "/api/calendar/cleanup",
-      "schedule": "0 */1 * * *"
-    },
-    {
-      "path": "/api/reminder",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 2 * * *"
     }
   ],
   "functions": {
-    "api/calendar/cleanup.js": {
+    "pages/api/calendar/cleanup.js": {
       "maxDuration": 300
-    },
-    "api/reminder.js": {
-      "maxDuration": 60
     }
   }
 }
