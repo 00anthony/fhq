@@ -6,7 +6,7 @@
     }
   ],
   "functions": {
-    "pages/api/calendar/cleanup.js": {
+    "src/pages/api/calendar/cleanup.js": {
       "maxDuration": 300
     }
   }

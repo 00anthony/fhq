@@ -11,6 +11,7 @@ const prisma = new PrismaClient()
 interface CleanupResult {
   bookingId: string
   service: string
+  barber: string
   duration: number
   appointmentTime: string
   success: boolean
@@ -55,7 +56,7 @@ async function deleteCalendarEvent(
 }
 
 /**
- * Main cleanup function with service-specific buffer times
+ * Main cleanup function with barber-specific service durations
  */
 async function performCleanup(): Promise<CleanupResult[]> {
   const now = DateTime.now().toUTC()
@@ -78,16 +79,18 @@ async function performCleanup(): Promise<CleanupResult[]> {
   const results: CleanupResult[] = []
   
   for (const booking of completedBookings) {
-    if (!booking.eventId || !booking.calendarId) {
-      console.log(`⚠️ Skipping booking ${booking.id} - missing eventId or calendarId`)
+    if (!booking.eventId || !booking.calendarId || !booking.service || !booking.barber) {
+      console.log(`⚠️ Skipping booking ${booking.id} - missing required data`)
       continue
     }
 
-    // Get service duration (use stored duration first, then fallback to services data)
-    let serviceDuration = booking.serviceDuration
+    // FIXED: Get barber-specific service duration
+    let serviceDuration = booking.serviceDuration // Use stored duration first
     if (!serviceDuration) {
+      // Fallback to looking up barber-specific duration from services data
       const serviceData = servicesData.find(s => s.name === booking.service)
-      serviceDuration = serviceData?.duration || 30
+      const barberData = serviceData?.barbers.find(b => b.name === booking.barber)
+      serviceDuration = barberData?.duration || 30 // Use barber-specific duration
     }
     
     // Calculate when appointment actually ended + buffer time
@@ -98,6 +101,7 @@ async function performCleanup(): Promise<CleanupResult[]> {
     const result: CleanupResult = {
       bookingId: booking.id,
       service: booking.service,
+      barber: booking.barber,
       duration: serviceDuration,
       appointmentTime: appointmentStart.toISO() || '',
       success: false
@@ -105,7 +109,7 @@ async function performCleanup(): Promise<CleanupResult[]> {
     
     // Check if it's time to clean up this appointment
     if (now >= cleanupTime) {
-      console.log(`🗑️ Cleaning up ${booking.service} appointment (${serviceDuration}min) from ${appointmentStart.toLocaleString()}`)
+      console.log(`🗑️ Cleaning up ${booking.service} appointment with ${booking.barber} (${serviceDuration}min) from ${appointmentStart.toLocaleString()}`)
       
       const deleteResult = await deleteCalendarEvent(
         booking.eventId, 
@@ -123,7 +127,7 @@ async function performCleanup(): Promise<CleanupResult[]> {
     } else {
       // Not yet time to clean up
       const minutesRemaining = cleanupTime.diff(now, 'minutes').minutes
-      console.log(`⏳ Appointment ${booking.id} needs ${Math.ceil(minutesRemaining)} more minutes before cleanup`)
+      console.log(`⏳ Appointment ${booking.id} with ${booking.barber} needs ${Math.ceil(minutesRemaining)} more minutes before cleanup`)
       continue // Don't add to results if we didn't attempt cleanup
     }
     
@@ -164,17 +168,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.log(`✅ Cleanup completed in ${duration}ms`)
     console.log(`📊 Results: ${successCount} successful, ${errorCount} errors`)
 
+    // Log breakdown by barber for verification
+    const barberBreakdown = results.reduce((acc, r) => {
+      if (!acc[r.barber]) acc[r.barber] = { count: 0, totalDuration: 0 }
+      acc[r.barber].count++
+      acc[r.barber].totalDuration += r.duration
+      return acc
+    }, {} as Record<string, { count: number, totalDuration: number }>)
+
+    Object.entries(barberBreakdown).forEach(([barber, stats]) => {
+      console.log(`📈 ${barber}: ${stats.count} appointments cleaned (avg ${stats.totalDuration / stats.count}min each)`)
+    })
+
     return res.status(200).json({
       success: true,
       summary: {
         total: results.length,
         successful: successCount,
         errors: errorCount,
-        duration: `${duration}ms`
+        duration: `${duration}ms`,
+        barberBreakdown
       },
       results: results.map(r => ({
         bookingId: r.bookingId,
         service: r.service,
+        barber: r.barber,
+        duration: r.duration,
         success: r.success,
         error: r.error
       }))

@@ -94,7 +94,7 @@ export async function cleanupCompletedAppointments(config: CleanupConfig = defau
 }
 
 /**
- * Cleanup with service-specific buffer times
+ * Cleanup with service-specific buffer times - FIXED for barber-specific durations
  */
 export async function cleanupWithServiceBuffers() {
   try {
@@ -117,14 +117,28 @@ export async function cleanupWithServiceBuffers() {
     
     const results = []
     for (const booking of completedBookings) {
-      if (!booking.eventId || !booking.calendarId || !booking.service) {
+      if (!booking.eventId || !booking.calendarId || !booking.service || !booking.barber) {
         console.log(`⚠️ Skipping booking ${booking.id} - missing required data`)
         continue
       }
 
-      // Get service duration
+      // FIXED: Get barber-specific service duration
       const serviceData = servicesData.find(s => s.name === booking.service)
-      const serviceDuration = serviceData?.duration || 30
+      if (!serviceData) {
+        console.log(`⚠️ Service ${booking.service} not found in services data`)
+        continue
+      }
+
+      // Get the specific barber's duration for this service
+      const barberData = serviceData.barbers.find(b => b.name === booking.barber)
+      if (!barberData) {
+        console.log(`⚠️ Barber ${booking.barber} not found for service ${booking.service}`)
+        continue
+      }
+
+      
+      // Option 1: Use stored serviceDuration from booking if available (recommended)
+      const serviceDuration = booking.serviceDuration || barberData.duration
       
       // Calculate when appointment actually ended + buffer
       const appointmentStart = DateTime.fromJSDate(booking.datetime, { zone: 'utc' })
@@ -133,7 +147,7 @@ export async function cleanupWithServiceBuffers() {
       
       // Check if it's time to clean up this appointment
       if (now >= cleanupTime) {
-        console.log(`🗑️ Cleaning up ${booking.service} appointment (${serviceDuration}min) from ${appointmentStart.toLocaleString()}`)
+        console.log(`🗑️ Cleaning up ${booking.service} appointment with ${booking.barber} (${serviceDuration}min) from ${appointmentStart.toLocaleString()}`)
         
         const success = await deleteCalendarEvent(
           booking.eventId, 
@@ -144,12 +158,15 @@ export async function cleanupWithServiceBuffers() {
         results.push({ 
           bookingId: booking.id, 
           service: booking.service,
+          barber: booking.barber,
           duration: serviceDuration,
           success 
         })
         
         // Add small delay to avoid rate limiting
         await new Promise(resolve => setTimeout(resolve, 200))
+      } else {
+        console.log(`⏳ Appointment ${booking.id} still in progress or within buffer period`)
       }
     }
 
