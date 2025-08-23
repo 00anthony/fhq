@@ -37,6 +37,18 @@ export default function ManageBookingClient() {
   const [successMessage, setSuccessMessage] = useState('')
   const [successType, setSuccessType] = useState<'reschedule' | 'cancel' | 'booking' | null>(null)  
 
+  // Helper function to extract barber names from the new API format
+  const extractBarberNames = (barbers: string[] | Array<{ name: string; duration: number }>): string[] => {
+    if (!Array.isArray(barbers) || barbers.length === 0) return []
+    
+    // Handle both old format (string[]) and new format (object[])
+    if (typeof barbers[0] === 'string') {
+      return barbers as string[]
+    } else {
+      return (barbers as Array<{ name: string; duration: number }>).map(b => b.name)
+    }
+  }
+
   // 🔄 Fetch booking info
   useEffect(() => {
     if (!bookingId) return
@@ -76,15 +88,28 @@ export default function ManageBookingClient() {
       })
 
       setIsFetchingTimes(true)
-      const res = await fetch(`/api/calendar/availability?${query}`)
-      const data = await res.json()
-      setAvailableTimes(
-        data.availableSlots.map((s: { slot: string; barbers: string[] }) => ({
-          time: s.slot,
-          barbers: s.barbers,
-        }))
-      )
-      setIsFetchingTimes(false)
+      try {
+        const res = await fetch(`/api/calendar/availability?${query}`)
+        const data = await res.json()
+        
+        console.log('📬 Raw availability data for rescheduling:', data);
+        
+        // FIXED: Handle new API format with barber objects
+        const slots = (data.availableSlots || []).map(
+          (item: { slot: string; barbers: string[] | Array<{ name: string; duration: number }> }) => ({
+            time: item.slot,
+            barbers: extractBarberNames(item.barbers),
+          })
+        )
+        
+        console.log('✅ Processed slots for rescheduling:', slots)
+        setAvailableTimes(slots)
+      } catch (error) {
+        console.error('❌ Error fetching availability for rescheduling:', error)
+        setAvailableTimes([])
+      } finally {
+        setIsFetchingTimes(false)
+      }
     }
     fetchAvailability()
   }, [selectedDateTime, booking?.barber, booking?.service])
