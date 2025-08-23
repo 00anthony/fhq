@@ -18,7 +18,6 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
   const isAnyBarber = (barber: string) => barber.toLowerCase().includes('any')
   const barberServices = getBarberServiceMap();
 
-
   const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
   const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif']
 
@@ -50,6 +49,18 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
     return true
   }
 
+  // Helper function to extract barber names from the new API format
+  const extractBarberNames = (barbers: string[] | Array<{ name: string; duration: number }>): string[] => {
+    if (!Array.isArray(barbers) || barbers.length === 0) return []
+    
+    // Handle both old format (string[]) and new format (object[])
+    if (typeof barbers[0] === 'string') {
+      return barbers as string[]
+    } else {
+      return (barbers as Array<{ name: string; duration: number }>).map(b => b.name)
+    }
+  }
+
   // Fetch availability whenever date, barber or bookingId changes
   useEffect(() => {
     console.log('🟢 selectedService changed:', selectedService);
@@ -62,7 +73,6 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
     const selectedDT = DateTime.fromJSDate(selectedDateTime, { zone: timeZone });
     const startISO = selectedDT.startOf('day').toUTC().toISO() || '';
     const endISO = selectedDT.endOf('day').toUTC().toISO() || '';
-
 
     const params = new URLSearchParams({
       start: startISO,
@@ -80,28 +90,36 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
     fetch(`/api/calendar/availability?${params.toString()}`)
       .then(res => res.json())
       .then(data => {
+        console.log('📬 Raw availability data:', data);
+        
         if (selectedBarber && !isAnyBarber(selectedBarber)) {
+          // FIXED: Handle new API format with barber objects
           const slots = (data.availableSlots || [])
-            .filter((slot: { slot: string; barbers: string[] }) =>
-              slot.barbers.includes(selectedBarber)
-            )
-            .map((slot: { slot: string; barbers: string[] }) => ({
+            .filter((slot: { slot: string; barbers: string[] | Array<{ name: string; duration: number }> }) => {
+              const barberNames = extractBarberNames(slot.barbers)
+              return barberNames.includes(selectedBarber)
+            })
+            .map((slot: { slot: string; barbers: string[] | Array<{ name: string; duration: number }> }) => ({
               time: slot.slot,
-              barbers: slot.barbers,
+              barbers: extractBarberNames(slot.barbers),
             }))
           setAvailableTimes(slots)
         } else {
+          // FIXED: Handle new API format for "any" barber selection
           const slots = (data.availableSlots || []).map(
-            (item: { slot: string; barbers: string[] }) => ({
+            (item: { slot: string; barbers: string[] | Array<{ name: string; duration: number }> }) => ({
               time: item.slot,
-              barbers: item.barbers,
+              barbers: extractBarberNames(item.barbers),
             })
           )
           setAvailableTimes(slots)
           console.log('✅ Slots set for UI:', slots)
         }
       })
-      .catch(() => setAvailableTimes([]))
+      .catch(error => {
+        console.error('❌ Error fetching availability:', error)
+        setAvailableTimes([])
+      })
       .finally(() => {
         setIsFetchingTimes(false); // ✅ Hide loading
       });
@@ -120,7 +138,6 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
       const slotTimeMs = new Date(slot.time).getTime();
       return Math.abs(slotTimeMs - selectedTimeMs) < 60 * 1000; // within 1 minute
     });
-
 
     if (slot && slot.barbers.length) {
       setAvailableBarbersForSelectedTime(slot.barbers)
@@ -142,7 +159,6 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
   useEffect(() => {
     console.log('Fetched slots:', availableTimes)
   }, [availableTimes])
-
 
   useEffect(() => {
     if (

@@ -55,14 +55,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'Missing fields' })
   }
 
-  // Get service duration from services data
+  // Get service duration from services data - FIXED to get barber-specific duration
   const serviceData = servicesData.find(s => s.name === service);
   if (!serviceData) {
     return res.status(400).json({ error: 'Invalid service selected' });
   }
   
-  const serviceDurationMinutes = serviceData.duration || 30; // fallback to 30 minutes
-  console.log(`📅 Service "${service}" duration: ${serviceDurationMinutes} minutes`);
+  // Get the specific barber's duration for this service
+  const barberData = serviceData.barbers.find(b => b.name === barber);
+  if (!barberData) {
+    return res.status(400).json({ error: 'Invalid barber selected for this service' });
+  }
+  
+  const serviceDurationMinutes = barberData.duration; // Use barber-specific duration
+  console.log(`📅 Service "${service}" with ${barber} duration: ${serviceDurationMinutes} minutes`);
 
   // Handle uploaded file (optional)
   let attachment = null;
@@ -115,12 +121,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const availabilityData = await response.json();
       console.log('📬 availabilityData:', availabilityData);
 
-      const availableSlots: { slot: string; barbers: string[] }[] = availabilityData.availableSlots || []
+      // FIXED: Handle the new response format from availability API
+      const availableSlots: Array<{
+        slot: string;
+        barbers: Array<{ name: string; duration: number }> | string[]; // Handle both formats
+        serviceDuration: number;
+      }> = availabilityData.availableSlots || []
+      
       console.log('📊 availableSlots.length:', availableSlots.length)
 
       availableSlots.forEach(s => {
         console.log('Slot:', s.slot, 'Barbers:', s.barbers);
-        console.log('Matches Barber?', s.barbers.includes(barber));
+        
+        // Handle both old format (string[]) and new format (object[])
+        const barberNames = Array.isArray(s.barbers) && s.barbers.length > 0
+          ? typeof s.barbers[0] === 'string' 
+            ? s.barbers as string[]
+            : (s.barbers as Array<{ name: string; duration: number }>).map(b => b.name)
+          : [];
+          
+        console.log('Matches Barber?', barberNames.includes(barber));
         console.log('Matches Time?', DateTime.fromISO(s.slot).toMillis() === userDateTime.toMillis());
       });
 
@@ -129,8 +149,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         console.log('⏰ Selected:', userDateTime.toISO(), userDateTime.toMillis())
 
         if (!slotObj?.slot || !Array.isArray(slotObj.barbers)) return false
+        
+        // Handle both old format (string[]) and new format (object[])
+        const barberNames = slotObj.barbers.length > 0
+          ? typeof slotObj.barbers[0] === 'string' 
+            ? slotObj.barbers as string[]
+            : (slotObj.barbers as Array<{ name: string; duration: number }>).map(b => b.name)
+          : [];
+        
         return (
-          slotObj.barbers.includes(barber) &&
+          barberNames.includes(barber) &&
           DateTime.fromISO(slotObj.slot).toMillis() === userDateTime.toMillis()
         )
       })
@@ -190,6 +218,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const barberEmail = barberEmails[barber] || 'fallback@barbershop.com'
 
+    // Get barber's price for this service
+    const servicePrice = barberData.price;
+
     // Send client confirmation email with duration info
     await resend.emails.send({
       from: 'Barbershop <onboarding@resend.dev>',
@@ -200,6 +231,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         <p>Thanks for booking a <strong>${service}</strong> with <strong>${barber}</strong>.</p>
         <p><strong>When:</strong> ${formattedTime} - ${formattedEndTime}</p>
         <p><strong>Duration:</strong> ${serviceDurationMinutes} minutes</p>
+        <p><strong>Price:</strong> $${servicePrice}</p>
         <p>You can <a href="https://fhq-two.vercel.app/manage-booking?bookingId=${bookingId}">reschedule or cancel your appointment here</a>.</p>
         <p>This link is private and allows you to manage your booking. Please don't share it.</p>
       `,
@@ -216,6 +248,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         <p><strong>Service:</strong> ${service}</p>
         <p><strong>When:</strong> ${formattedTime} - ${formattedEndTime}</p>
         <p><strong>Duration:</strong> ${serviceDurationMinutes} minutes</p>
+        <p><strong>Price:</strong> $${servicePrice}</p>
         <p><strong>Phone:</strong> ${phone}</p>
         <p><strong>Notes:</strong> ${comments || 'None'}</p>
       `,

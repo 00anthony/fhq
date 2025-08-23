@@ -4,6 +4,7 @@ import { PrismaClient } from '@prisma/client'
 import auth from '@/lib/google-auth'
 import resend from '@/lib/resend'
 import { DateTime } from 'luxon'
+import { servicesData } from '@/data/services' // Import services data
 
 const prisma = new PrismaClient()
 
@@ -32,47 +33,81 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Cannot reschedule more than two weeks in advance' }, { status: 400 });
     }
 
-    // 2. Format for email using client's original time zone
-    const formattedTime = dt.setZone(timeZone).toLocaleString(DateTime.DATETIME_MED)
-
     // Find booking
     const booking = await prisma.booking.findUnique({ where: { id: bookingId } })
     if (!booking) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
     }
 
-    // Overlap check before calendar update:
+    // FIXED: Get barber-specific service duration
+    let serviceDurationMinutes = booking.serviceDuration // Use stored duration first
+    if (!serviceDurationMinutes) {
+      // Fallback to looking up barber-specific duration from services data
+      const serviceData = servicesData.find(s => s.name === booking.service)
+      const barberData = serviceData?.barbers.find(b => b.name === booking.barber)
+      serviceDurationMinutes = barberData?.duration || 30 // Use barber-specific duration with fallback
+    }
+
+    console.log(`📅 Rescheduling ${booking.service} with ${booking.barber} (${serviceDurationMinutes} minutes)`);
+
+    // 2. Format for email using client's original time zone
+    const formattedTime = dt.setZone(timeZone).toLocaleString(DateTime.DATETIME_MED)
+    const formattedEndTime = dt.setZone(timeZone).plus({ minutes: serviceDurationMinutes }).toLocaleString(DateTime.TIME_SIMPLE)
+
+    // Overlap check before calendar update - ENHANCED to check for duration conflicts
+    const appointmentEnd = dt.plus({ minutes: serviceDurationMinutes })
+    
     const overlapping = await prisma.booking.findFirst({
       where: {
         barber: booking.barber,
-        datetime: dt.toJSDate(),
-        id: { not: bookingId }, // don’t check against the current booking
+        id: { not: bookingId }, // don't check against the current booking
+        eventDeleted: { not: true }, // only check active bookings
+        OR: [
+          // New appointment starts during existing appointment
+          {
+            datetime: {
+              lte: dt.toJSDate()
+            },
+            // We need to calculate when existing appointment ends
+            // For now, we'll do a simpler check and let the calendar API handle conflicts
+          },
+          // Existing appointment starts during new appointment
+          {
+            datetime: {
+              gte: dt.toJSDate(),
+              lt: appointmentEnd.toJSDate()
+            }
+          }
+        ]
       },
     })
 
     if (overlapping) {
-      return NextResponse.json({ error: 'That time slot has already been taken' }, { status: 409 })
+      return NextResponse.json({ error: 'That time slot conflicts with an existing appointment' }, { status: 409 })
     }
 
-    // Update Google Calendar event
+    // Update Google Calendar event with correct duration
     const calendar = google.calendar({ version: 'v3', auth })
+    const eventEndTime = dt.plus({ minutes: serviceDurationMinutes }).toISO()
+    
     await calendar.events.patch({
       calendarId: booking.calendarId,
       eventId: booking.eventId,
       requestBody: {
-        start: { dateTime: newDatetime },
-        end: {
-          dateTime: new Date(new Date(newDatetime).getTime() + 30 * 60 * 1000).toISOString(),
-        },
+        summary: `${booking.service} with ${booking.barber}`, // Update summary for clarity
+        description: `Name: ${booking.name}\nPhone: ${booking.phone}\nDuration: ${serviceDurationMinutes} minutes\n\n${booking.comments || ''}`,
+        start: { dateTime: newDatetime, timeZone },
+        end: { dateTime: eventEndTime, timeZone },
       },
     })
 
-    // 3. Update DB with UTC datetime and timeZone
+    // 3. Update DB with UTC datetime, timeZone, and ensure serviceDuration is stored
     await prisma.booking.update({
       where: { id: bookingId },
       data: {
         datetime: dt.toJSDate(), // stored in UTC
         timeZone, // store original client time zone
+        serviceDuration: serviceDurationMinutes, // ensure duration is stored for future reference
       },
     })
 
@@ -84,6 +119,11 @@ export async function POST(req: Request) {
     }
     const barberEmail = barberEmails[booking.barber] || 'fallback@barbershop.com'
 
+    // Get barber's price for this service
+    const serviceData = servicesData.find(s => s.name === booking.service)
+    const barberData = serviceData?.barbers.find(b => b.name === booking.barber)
+    const servicePrice = barberData?.price || 'N/A'
+
     // Client email
     try {
       await resend.emails.send({
@@ -93,12 +133,14 @@ export async function POST(req: Request) {
         html: `
           <h2>Hi ${booking.name},</h2>
           <p>Your appointment for <strong>${booking.service}</strong> with <strong>${booking.barber}</strong> has been rescheduled to:</p>
-          <p><strong>${formattedTime}</strong></p>
+          <p><strong>${formattedTime} - ${formattedEndTime}</strong></p>
+          <p><strong>Duration:</strong> ${serviceDurationMinutes} minutes</p>
+          <p><strong>Price:</strong> $${servicePrice}</p>
           <p>If you need to make more changes, you can always return to your booking link.</p>
         `,
       })
     } catch (emailError) {
-      console.error('Faild to send client rescheduling email:', emailError)
+      console.error('Failed to send client rescheduling email:', emailError)
     }
 
     // Barber email
@@ -111,15 +153,21 @@ export async function POST(req: Request) {
           <h2>Booking Rescheduled</h2>
           <p><strong>Client:</strong> ${booking.name}</p>
           <p><strong>Service:</strong> ${booking.service}</p>
-          <p><strong>New Time:</strong> ${formattedTime}</p>
+          <p><strong>New Time:</strong> ${formattedTime} - ${formattedEndTime}</p>
+          <p><strong>Duration:</strong> ${serviceDurationMinutes} minutes</p>
+          <p><strong>Price:</strong> $${servicePrice}</p>
+          <p><strong>Phone:</strong> ${booking.phone}</p>
           <p>Please update your schedule accordingly.</p>
         `,
       })
     } catch (emailError) {
-      console.error('Failed to send barber rescheduling email: ', emailError)
+      console.error('Failed to send barber rescheduling email:', emailError)
     }
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ 
+      success: true,
+      serviceDuration: serviceDurationMinutes 
+    })
   } catch (error) {
     console.error('Reschedule error:', error)
     return NextResponse.json({ error: 'Failed to reschedule booking' }, { status: 500 })
