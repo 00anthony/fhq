@@ -16,7 +16,6 @@ export function getServiceSummary(
   return {
     name: fullService.name,
     price: barberDetails.price,
-    duration: parseInt(barberDetails.duration)
+    duration: barberDetails.duration 
   }
 }
-

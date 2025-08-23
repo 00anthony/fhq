@@ -1,7 +1,7 @@
 export type BarberOption = {
   name: string;
   price: number | "FREE";
-  duration: string;
+  duration: number;
 };
 
 export type Media = {
@@ -16,7 +16,6 @@ export type Media = {
 export type Service = {
   id: number;
   name: string;
-  duration: number; //minutes
   barbers: BarberOption[];
   category?: string[];
   description?: string;

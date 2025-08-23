@@ -61,7 +61,8 @@ export const getDurationDisplay = (
     selectedBarber.toLowerCase() !== "any barber" &&
     selectedBarberInfo !== undefined
   ) {
-    return selectedBarberInfo.duration;
+    // Convert number to string with "min" suffix
+    return `${selectedBarberInfo.duration} min`;
   }
 
   return getDurationRange(serviceBarbers);
