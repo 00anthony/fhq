@@ -29,45 +29,36 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ availableSlots: [] })
   }
 
-  // Step 1: Get service details including duration
+  // Step 1: Get service details
   const serviceData = servicesData.find(s => s.name === service);
   if (!serviceData) {
     return NextResponse.json({ error: 'Service not found' }, { status: 400 });
   }
 
-  // Get service duration (assuming it's stored in minutes in your servicesData)
-  const serviceDurationMinutes = serviceData.duration || 30; // fallback to 30 if not specified
-
-  console.log('🕒 Service duration:', serviceDurationMinutes, 'minutes');
-
   // Step 2: Get all barbers who offer this service
   let barbersToCheck = serviceData.barbers
-    .map(b => b.name)
-    .filter(name => barberCalendars[name]); // only include barbers with calendar ID
+    .map(b => ({ name: b.name, duration: b.duration }))
+    .filter(barber => barberCalendars[barber.name]); // only include barbers with calendar ID
 
-  console.log('Query received:', service);
-  console.log('Selected barber:', selectedBarber);
+  console.log('🧑‍🔧 Barbers offering this service:', barbersToCheck);
 
   if (!barbersToCheck || barbersToCheck.length === 0) {
     return NextResponse.json({ availableSlots: [] });
   }
 
-  console.log('🧑‍🔧 Barbers offering this service:', barbersToCheck);
-
   // Step 3: If a specific barber was selected, filter to just that one
   if (selectedBarber && selectedBarber !== 'any') {
-    barbersToCheck = barbersToCheck.filter(b => b === selectedBarber);
+    barbersToCheck = barbersToCheck.filter(b => b.name === selectedBarber);
   }
 
   console.log('Barber received', barbersToCheck);
 
-  // Define working hours and base slot interval (keep small for flexibility)
+  // Define working hours and base slot interval
   const workingHours = { startHour: 9, endHour: 17 };
   const baseSlotInterval = 15; // 15-minute base intervals for more flexibility
 
-  // Prepare a map of all barbers' available slots
-  const slotMap: Record<string, Set<string>> = {};
-  const allSlotsSet = new Set<string>();
+  // NEW: Store slots per barber with their specific duration
+  const barberSlots: Record<string, { slots: string[], duration: number }> = {};
 
   function generateAvailableSlots(
     start: string,
@@ -122,12 +113,13 @@ export async function GET(req: NextRequest) {
     return slots;
   }
 
+  // NEW: Process each barber with their specific duration
   for (const barber of barbersToCheck) {
-    const calendarId = barberCalendars[barber];
+    const calendarId = barberCalendars[barber.name];
     if (!calendarId) continue;
 
     try {
-      console.log(`📅 Checking busy times for barber: ${barber}`);
+      console.log(`📅 Checking busy times for barber: ${barber.name}`);
       const busyRaw = await getBusyTimes(start, end, calendarId);
       const busy = busyRaw
         .filter(
@@ -141,33 +133,75 @@ export async function GET(req: NextRequest) {
         end, 
         busy, 
         workingHours, 
-        serviceDurationMinutes,
+        barber.duration, // Use each barber's specific duration
         baseSlotInterval
       );
 
-      available.forEach((slot: string) => {
-        if (!slotMap[slot]) slotMap[slot] = new Set();
-        slotMap[slot].add(barber);
-        allSlotsSet.add(slot);
-      });
+      barberSlots[barber.name] = {
+        slots: available,
+        duration: barber.duration
+      };
 
-      console.log(`✅ Available slots for ${barber}:`, available.length, 'slots');
+      console.log(`✅ Available slots for ${barber.name}:`, available.length, 'slots');
     } catch (error) {
-      console.error(`Failed to get availability for ${barber}:`, error);
+      console.error(`Failed to get availability for ${barber.name}:`, error);
     }
   }
 
-  // Convert final result to array format with service duration info
-  const availableSlots = Array.from(allSlotsSet).sort().map(slot => ({
-    slot,
-    barbers: Array.from(slotMap[slot]),
-    serviceDuration: serviceDurationMinutes // Include duration for frontend use
-  }));
+  // NEW: Create final available slots ensuring proper barber-slot-duration matching
+  const finalAvailableSlots: Array<{
+    slot: string;
+    barbers: Array<{ name: string; duration: number }>;
+    serviceDuration: number;
+  }> = [];
 
-  console.log('Returning available slots:', availableSlots.length, 'total slots');
+  // If specific barber selected, use their duration and slots
+  if (selectedBarber && selectedBarber !== 'any') {
+    const barberData = barberSlots[selectedBarber];
+    if (barberData) {
+      barberData.slots.forEach(slot => {
+        finalAvailableSlots.push({
+          slot,
+          barbers: [{ name: selectedBarber, duration: barberData.duration }],
+          serviceDuration: barberData.duration
+        });
+      });
+    }
+  } else {
+    // For "any" barber: group slots by time, but each slot shows which barbers are available with their durations
+    const allUniqueSlots = new Set<string>();
+    Object.values(barberSlots).forEach(barberData => {
+      barberData.slots.forEach(slot => allUniqueSlots.add(slot));
+    });
+
+    Array.from(allUniqueSlots).sort().forEach(slot => {
+      const availableBarbersForSlot: Array<{ name: string; duration: number }> = [];
+      
+      // Check which barbers are available for this specific slot
+      Object.entries(barberSlots).forEach(([barberName, barberData]) => {
+        if (barberData.slots.includes(slot)) {
+          availableBarbersForSlot.push({
+            name: barberName,
+            duration: barberData.duration
+          });
+        }
+      });
+
+      if (availableBarbersForSlot.length > 0) {
+        finalAvailableSlots.push({
+          slot,
+          barbers: availableBarbersForSlot,
+          serviceDuration: availableBarbersForSlot[0].duration // Use first available barber's duration as default
+        });
+      }
+    });
+  }
+
+  console.log('Returning available slots:', finalAvailableSlots.length, 'total slots');
 
   return NextResponse.json({ 
-    availableSlots,
-    serviceDuration: serviceDurationMinutes // Also include at top level
+    availableSlots: finalAvailableSlots,
+    // For backward compatibility, return duration of first barber or default
+    serviceDuration: barbersToCheck[0]?.duration || 30
   });
 }
