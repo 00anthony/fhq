@@ -1,6 +1,6 @@
 import './globals.css';
 import NavBar from '../components/Navbar/NavBar';
-import Footer from '../components/Footer';
+import Footer from '../components/Footer/Footer';
 import type { Metadata } from 'next';
 import { Providers } from './providers'; // 👈
 

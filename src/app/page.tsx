@@ -1,6 +1,6 @@
-import Hero from "@/components/Hero";
-import Intro from "@/components/Intro";
-import BarberSection from "@/components/BarberSection";
+import Hero from "@/components/Hero/Hero";
+import Intro from "@/components/About/Intro";
+import BarberSection from "@/components/Barbers/BarberSection";
 
 export const metadata = {
   title: "Ants Booking | Home",

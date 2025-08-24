@@ -2,7 +2,7 @@
 
 import { LazyMotion, domAnimation, m } from 'framer-motion';
 import BarberCard from './BarberCard';
-import { barbers, Barber } from '../data/barbers';
+import { barbers, Barber } from '@/data/barbers';
 
 const BarberSection = () => {
   return (

@@ -1,7 +1,7 @@
 import React from 'react';
-import Intro from "@/components/Intro";
-import ReviewSection from "@/components/ReviewSection";
-import AdvantagesSection from '@/components/AdvantageSection';
+import Intro from "@/components/About/Intro";
+import ReviewSection from "@/components/Reviews/ReviewSection";
+import AdvantagesSection from '@/components/About/AdvantageSection';
 import { barbers } from "@/data/barbers";
 import { advantages } from '@/data/advantages';
 

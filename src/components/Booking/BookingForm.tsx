@@ -14,7 +14,7 @@ import { allBarbers } from '@/data/services';
 import { servicesData } from '@/data/services'
 import { getBarberServiceMap } from "@/lib/utils/barberServiceMap";
 import { getServiceSummary } from '@/lib/utils/serviceSummary'
-import SuccessModal from '../SuccessModal'
+import SuccessModal from '../Modals/SuccessModal'
 
 
 const services = servicesData.map(s => s.name)

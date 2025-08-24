@@ -4,7 +4,7 @@ import { servicesData } from "@/data/services";
 import dynamic from "next/dynamic";
 import ServiceCard from "@/components/Services/ServiceCard";
 
-const ModalGallery = dynamic(() => import("@/components/ModalGallery"), {
+const ModalGallery = dynamic(() => import("@/components/Gallary/ModalGallery"), {
   ssr: false,
 });
 

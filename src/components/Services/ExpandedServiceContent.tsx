@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import  useMeasure  from '@/hooks/useMeasure'; 
-import ThumbnailCarousel from '@/components/ThumbnailCarousel';
+import ThumbnailCarousel from '@/components/Gallary/ThumbnailCarousel';
 import type { Service } from '@/types/services'; 
 
 type ExpandedServiceContentProps = {

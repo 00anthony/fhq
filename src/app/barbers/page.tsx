@@ -1,4 +1,4 @@
-import BarberSection from "@/components/BarberSection";
+import BarberSection from "@/components/Barbers/BarberSection";
 
 const BarbersPage = () => {
   return (

@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { GalleryGridProps } from '@/types/gallery';
 import GallaryGrid from './GallaryGrid';
-import BarberFilter from './BarberFilter';
-import MultiSelectDropdown from './MultiSelectDropdown';
+import BarberFilter from '../Filters/BarberFilter';
+import MultiSelectDropdown from '../Filters/MultiSelectDropdown';
 
 export default function GalleryGrid({ items, barbers }: GalleryGridProps) {
   const [barberFilter, setBarberFilter] = useState('All');

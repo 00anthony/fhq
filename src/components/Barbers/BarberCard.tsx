@@ -7,18 +7,18 @@ import { FaInstagram, FaTiktok } from 'react-icons/fa';
 import { LazyMotion, domAnimation, m } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import { memo } from 'react'; //memoised card so array(barber.ts) must be static so this needs to be removed if reviews are fetched dynamically later on
-import ThumbnailCarousel from "@/components/ThumbnailCarousel";
+import ThumbnailCarousel from "@/components/Gallary/ThumbnailCarousel";
 import { useRouter } from 'next/navigation';
 import { Barber } from "@/data/barbers";
-import StarRating from './StarRating';
-import ReviewsModal from './ReviewsModal';
+import StarRating from '../Reviews/StarRating';
+import ReviewsModal from '../Reviews/ReviewsModal';
 
 
 type BarberCardProps = {
   barber: Barber;
 };
 
-const ModalGallery = dynamic(() => import('./ModalGallery'), {
+const ModalGallery = dynamic(() => import('../Gallary/ModalGallery'), {
   ssr: false,          // keep out of the server bundle
   loading: () => null, // no flash
 });

@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
 import { barbers, Barber } from '@/data/barbers'; // adjust path if needed
-import BarberCard from '@/components/BarberCard';
-import GallaryGrid from '@/components/GallaryGrid';
-import ReviewGrid from '@/components/ReviewGrid';
+import BarberCard from '@/components/Barbers/BarberCard';
+import GallaryGrid from '@/components/Gallary/GallaryGrid';
+import ReviewGrid from '@/components/Reviews/ReviewGrid';
 
 
 // ✅ Updated type for Next.js 15 - params is now a Promise

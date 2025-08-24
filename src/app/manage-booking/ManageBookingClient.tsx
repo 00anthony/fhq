@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { DateTimePickerField } from '@/components/Booking/DateTimePickerField'
-import ConfirmModal from '@/components/ConfirmModal'
-import SuccessModal from '@/components/SuccessModal'
+import ConfirmModal from '@/components/Modals/ConfirmModal'
+import SuccessModal from '@/components/Modals/SuccessModal'
 
 type Booking = {
   id: string
