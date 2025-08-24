@@ -30,8 +30,13 @@ model Booking {
   reminderSent    Boolean   @default(false)
   eventDeleted    Boolean   @default(false) // Whether the calendar event has been deleted
   deletedAt       DateTime? // When the calendar event was deleted
+  
+  // New field for tracking review emails
+  reviewEmailSent Boolean   @default(false)
+  reviewEmailSentAt DateTime? // When the review email was sent
 
   @@index([email])
   @@index([datetime])
   @@index([eventDeleted, datetime]) // Index for cleanup queries
+  @@index([reviewEmailSent, datetime]) // Index for review email queries
 }

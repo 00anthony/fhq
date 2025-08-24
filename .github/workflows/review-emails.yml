@@ -1,0 +1,27 @@
+name: Send Review Request Emails
+
+on:
+  schedule:
+    # Run every day at 2:00 PM CDT (19:00 UTC) for optimal engagement
+    # Format: minute hour day month day-of-week
+    - cron: '0 19 * * *'
+  
+  # Allow manual triggering for testing
+  workflow_dispatch:
+
+jobs:
+  send-review-emails:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Send Review Request Emails
+        run: |
+          curl -X POST "${{ secrets.NEXTAUTH_URL }}/api/send-review-emails" \
+            -H "Authorization: Bearer ${{ secrets.REVIEW_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -w "HTTP Status: %{http_code}\n" \
+            -s \
+            --fail-with-body
+        
+      - name: Log completion
+        run: echo "Review email job completed at $(date)"
