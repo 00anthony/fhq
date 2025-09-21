@@ -10,7 +10,7 @@ import { FileUpload } from './FileUpload'
 import { ContactFields } from './ContactFields'
 import { BarberTimeSelect } from './BarberTimeSelect'
 import { BookingSummary } from './BookingSummary'
-import { allBarbers } from '@/data/services';
+import { allBarbers } from '@/data/barbers';
 import { servicesData } from '@/data/services'
 import { getBarberServiceMap } from "@/lib/utils/barberServiceMap";
 import { getServiceSummary } from '@/lib/utils/serviceSummary'

@@ -1,6 +1,6 @@
 import React from 'react'
 import { getPriceDisplay } from "@/lib/utils/serviceDisplay";
-import { BarberOption } from "@/types/services";
+import { BarberOption } from "@/data/services";
 
 
 type BarberTimeSelectProps = {

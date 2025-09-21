@@ -29,7 +29,7 @@ export default function ServicesGrid({
   const filteredServices = servicesData.filter((service) => {
     const barberMatch =
       selectedBarber === "Any Barber" ||
-      service.barbers.some((barber) => barber.name === selectedBarber);
+      service.barbers.some((barber) => barber.barberId === selectedBarber);
 
     const categoryMatch =
       selectedCategory === "All" ||

@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import  useMeasure  from '@/hooks/useMeasure'; 
 import ThumbnailCarousel from '@/components/Gallary/ThumbnailCarousel';
-import type { Service } from '@/types/services'; 
+import { Service } from "@/data/services";
 
 type ExpandedServiceContentProps = {
   service: Service;
@@ -39,7 +39,7 @@ export default function ExpandedServiceContent({
         <ul className="mt-3 text-sm text-gray-600">
           {service.barbers.map((b, index) => (
             <li key={index} className="flex justify-between pb-4">
-              <span>{b.name}</span>
+              <span>{b.barberId}</span>
               <span>{`${formatPrice(b.price)} • ${b.duration}`}</span>
             </li>
           ))}

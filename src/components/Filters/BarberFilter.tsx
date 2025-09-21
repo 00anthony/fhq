@@ -11,6 +11,15 @@ export default function BarberFilter({
   selectedBarber,
   onSelect,
 }: BarberFilterProps) {
+  // Add safety check for undefined barbers
+  if (!barbers || barbers.length === 0) {
+    return (
+      <div className="flex gap-4 flex-wrap">
+        <div className="text-gray-400 text-sm">Loading barbers...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex gap-4 flex-wrap">
       {barbers.map((barber) => (

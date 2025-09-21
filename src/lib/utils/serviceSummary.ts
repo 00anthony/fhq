@@ -9,7 +9,7 @@ export function getServiceSummary(
     selectedBarber.toLowerCase() === 'any' ? selectedBarberForTime : selectedBarber
 
   const fullService = servicesData.find(s => s.name === serviceName)
-  const barberDetails = fullService?.barbers.find(b => b.name === resolvedBarber)
+  const barberDetails = fullService?.barbers.find(b => b.barberId === resolvedBarber)
 
   if (!fullService || !barberDetails) return null
 

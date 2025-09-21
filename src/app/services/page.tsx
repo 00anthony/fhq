@@ -1,12 +1,14 @@
 "use client";
 import { useState } from "react";
-import { allBarbers, categories } from "@/data/services";
+import { categories } from "@/data/services";
+import { barbers } from "@/data/barbers";
 import ServicesFilters from "@/components/Services/ServiceFilters";
 import ServicesGrid from "@/components/Services/ServicesGrid"; 
 
 export default function ServicesPage() {
   const [selectedBarber, setSelectedBarber] = useState("Any Barber");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const barberNames = ['Any Barber', ...barbers.map(b => b.name)];
 
   return (
     <section className="bg-neutral-900 py-20">
@@ -23,7 +25,7 @@ export default function ServicesPage() {
           selectedCategory={selectedCategory}
           onSelectBarber={setSelectedBarber}
           onSelectCategory={setSelectedCategory}
-          barbers={allBarbers}
+          barbers={barberNames}
           categories={categories}
         />
 

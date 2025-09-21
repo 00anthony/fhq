@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import ExpandedServiceContent from "@/components/Services/ExpandedServiceContent";
-import { Service } from "@/types/services";
-import { getPriceDisplay, getDurationDisplay, } from "@/lib/utils/serviceDisplay";
+import { Service } from "@/data/services"; // Updated import path
+import { getPriceDisplay, getDurationDisplay } from "@/lib/utils/serviceDisplay";
 
 type ServiceCardProps = {
   service: Service;

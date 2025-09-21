@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getBusyTimes } from '@/lib/google-calendar'
-import { servicesData } from '@/data/services'
+import { getServiceBarbers } from '@/data/services'
+import { getBarberCalendarMap } from '@/data/barbers'
 import { DateTime, Interval } from 'luxon'
 
 export async function GET(req: NextRequest) {
@@ -16,11 +17,8 @@ export async function GET(req: NextRequest) {
   console.log('Service:', service);
   console.log('Selected Barber:', selectedBarber);
 
-  const barberCalendars: Record<string, string> = {
-    Jay: 'anthonytij3@gmail.com',
-    Luis: 'luisbarber@gmail.com',
-    //Los: 'losbarber@gmail.com',
-  };
+  // Get calendar mapping from barber data instead of hardcoded object
+  const barberCalendars = getBarberCalendarMap();
 
   if (!start || !end) {
     return NextResponse.json({ error: 'Missing start or end' }, { status: 400 })
@@ -29,18 +27,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ availableSlots: [] })
   }
 
-  // Step 1: Get service details
-  const serviceData = servicesData.find(s => s.name === service);
-  if (!serviceData) {
-    return NextResponse.json({ error: 'Service not found' }, { status: 400 });
+  // Step 1: Get service details with full barber info
+  const serviceBarbers = getServiceBarbers(service);
+  if (!serviceBarbers || serviceBarbers.length === 0) {
+    return NextResponse.json({ error: 'Service not found or no barbers available' }, { status: 400 });
   }
 
-  // Step 2: Get all barbers who offer this service
-  let barbersToCheck = serviceData.barbers
-    .map(b => ({ name: b.name, duration: b.duration }))
-    .filter(barber => barberCalendars[barber.name]); // only include barbers with calendar ID
+  // Step 2: Filter to only barbers with calendar integration
+  let barbersToCheck = serviceBarbers.filter(sb => sb.barberInfo?.calendarId);
 
-  console.log('🧑‍🔧 Barbers offering this service:', barbersToCheck);
+  console.log('🧑‍🔧 Barbers offering this service with calendars:', barbersToCheck.map(b => b.barberInfo?.name));
 
   if (!barbersToCheck || barbersToCheck.length === 0) {
     return NextResponse.json({ availableSlots: [] });
@@ -48,27 +44,22 @@ export async function GET(req: NextRequest) {
 
   // Step 3: If a specific barber was selected, filter to just that one
   if (selectedBarber && selectedBarber !== 'any') {
-    barbersToCheck = barbersToCheck.filter(b => b.name === selectedBarber);
+    barbersToCheck = barbersToCheck.filter(b => b.barberId === selectedBarber);
   }
 
-  console.log('Barber received', barbersToCheck);
+  console.log('Final barbers to check:', barbersToCheck.map(b => b.barberInfo?.name));
 
-  // Define working hours and base slot interval
-  const workingHours = { startHour: 9, endHour: 17 };
-  const baseSlotInterval = 15; // 15-minute base intervals for more flexibility
-
-  // NEW: Store slots per barber with their specific duration
-  const barberSlots: Record<string, { slots: string[], duration: number }> = {};
+  // Store slots per barber with their specific duration and availability settings
+  const barberSlots: Record<string, { slots: string[], duration: number, barberInfo: any }> = {};
 
   function generateAvailableSlots(
     start: string,
     end: string,
     busy: { start: string; end: string }[],
-    workingHours: { startHour: number; endHour: number },
-    serviceDurationMinutes: number,
-    baseSlotInterval: number = 15
+    barberInfo: any,
+    serviceDurationMinutes: number
   ): string[] {
-    const timeZone = 'America/Chicago';
+    const timeZone = barberInfo.timeZone || 'America/Chicago';
     const slots: string[] = [];
 
     // Parse input dates as UTC, then convert to local timezone start of day
@@ -80,15 +71,50 @@ export async function GET(req: NextRequest) {
       day <= endDate;
       day = day.plus({ days: 1 })
     ) {
-      const workStart = day.set({ hour: workingHours.startHour, minute: 0 });
-      const workEnd = day.set({ hour: workingHours.endHour, minute: 0 });
+      // Get day of week for availability lookup
+      const dayOfWeek = day.weekdayLong?.toLowerCase() as keyof typeof barberInfo.availability;
+      const dayAvailability = barberInfo.availability[dayOfWeek];
 
-      // Generate potential start times based on base interval
+      // Skip if barber is not available this day
+      if (!dayAvailability?.isActive) {
+        continue;
+      }
+
+      // Parse barber's working hours for this day
+      const [startHour, startMinute] = dayAvailability.startTime.split(':').map(Number);
+      const [endHour, endMinute] = dayAvailability.endTime.split(':').map(Number);
+      
+      const workStart = day.set({ hour: startHour, minute: startMinute });
+      const workEnd = day.set({ hour: endHour, minute: endMinute });
+
+      // Use barber's specific slot interval
+      const slotInterval = dayAvailability.slotInterval;
+
+      // Generate potential start times based on barber's slot interval
       for (
         let slotTime = workStart;
         slotTime.plus({ minutes: serviceDurationMinutes }) <= workEnd;
-        slotTime = slotTime.plus({ minutes: baseSlotInterval })
+        slotTime = slotTime.plus({ minutes: slotInterval })
       ) {
+        // Check if this time conflicts with barber's breaks
+        const isInBreak = dayAvailability.breaks?.some((breakTime: { startTime: string; endTime: string }) => {
+          const [breakStartHour, breakStartMinute] = breakTime.startTime.split(':').map(Number);
+          const [breakEndHour, breakEndMinute] = breakTime.endTime.split(':').map(Number);
+          
+          const breakStart = day.set({ hour: breakStartHour, minute: breakStartMinute });
+          const breakEnd = day.set({ hour: breakEndHour, minute: breakEndMinute });
+          
+          const serviceStart = slotTime;
+          const serviceEnd = slotTime.plus({ minutes: serviceDurationMinutes });
+          
+          // Check if service overlaps with break
+          return serviceStart < breakEnd && serviceEnd > breakStart;
+        });
+
+        if (isInBreak) {
+          continue;
+        }
+
         const slotStartUtc = slotTime.toUTC();
         const slotEndUtc = slotTime.plus({ minutes: serviceDurationMinutes }).toUTC();
 
@@ -113,14 +139,16 @@ export async function GET(req: NextRequest) {
     return slots;
   }
 
-  // NEW: Process each barber with their specific duration
-  for (const barber of barbersToCheck) {
-    const calendarId = barberCalendars[barber.name];
-    if (!calendarId) continue;
+  // Process each barber with their specific duration and availability
+  for (const serviceBarber of barbersToCheck) {
+    const { barberId, duration } = serviceBarber;
+    const barberInfo = serviceBarber.barberInfo;
+    
+    if (!barberInfo?.calendarId) continue;
 
     try {
-      console.log(`📅 Checking busy times for barber: ${barber.name}`);
-      const busyRaw = await getBusyTimes(start, end, calendarId);
+      console.log(`📅 Checking busy times for barber: ${barberInfo.name} (${barberId})`);
+      const busyRaw = await getBusyTimes(start, end, barberInfo.calendarId);
       const busy = busyRaw
         .filter(
           (p): p is { start: string; end: string } =>
@@ -132,26 +160,26 @@ export async function GET(req: NextRequest) {
         start, 
         end, 
         busy, 
-        workingHours, 
-        barber.duration, // Use each barber's specific duration
-        baseSlotInterval
+        barberInfo,
+        duration // Use service-specific duration for this barber
       );
 
-      barberSlots[barber.name] = {
+      barberSlots[barberId] = {
         slots: available,
-        duration: barber.duration
+        duration: duration,
+        barberInfo: barberInfo
       };
 
-      console.log(`✅ Available slots for ${barber.name}:`, available.length, 'slots');
+      console.log(`✅ Available slots for ${barberInfo.name}:`, available.length, 'slots');
     } catch (error) {
-      console.error(`Failed to get availability for ${barber.name}:`, error);
+      console.error(`Failed to get availability for ${barberInfo.name}:`, error);
     }
   }
 
-  // NEW: Create final available slots ensuring proper barber-slot-duration matching
+  // Create final available slots ensuring proper barber-slot-duration matching
   const finalAvailableSlots: Array<{
     slot: string;
-    barbers: Array<{ name: string; duration: number }>;
+    barbers: Array<{ barberId: string; name: string; duration: number }>;
     serviceDuration: number;
   }> = [];
 
@@ -162,26 +190,31 @@ export async function GET(req: NextRequest) {
       barberData.slots.forEach(slot => {
         finalAvailableSlots.push({
           slot,
-          barbers: [{ name: selectedBarber, duration: barberData.duration }],
+          barbers: [{ 
+            barberId: selectedBarber, 
+            name: barberData.barberInfo.name,
+            duration: barberData.duration 
+          }],
           serviceDuration: barberData.duration
         });
       });
     }
   } else {
-    // For "any" barber: group slots by time, but each slot shows which barbers are available with their durations
+    // For "any" barber: group slots by time, showing which barbers are available
     const allUniqueSlots = new Set<string>();
     Object.values(barberSlots).forEach(barberData => {
       barberData.slots.forEach(slot => allUniqueSlots.add(slot));
     });
 
     Array.from(allUniqueSlots).sort().forEach(slot => {
-      const availableBarbersForSlot: Array<{ name: string; duration: number }> = [];
+      const availableBarbersForSlot: Array<{ barberId: string; name: string; duration: number }> = [];
       
       // Check which barbers are available for this specific slot
-      Object.entries(barberSlots).forEach(([barberName, barberData]) => {
+      Object.entries(barberSlots).forEach(([barberId, barberData]) => {
         if (barberData.slots.includes(slot)) {
           availableBarbersForSlot.push({
-            name: barberName,
+            barberId: barberId,
+            name: barberData.barberInfo.name,
             duration: barberData.duration
           });
         }

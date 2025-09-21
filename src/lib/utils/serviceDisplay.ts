@@ -1,5 +1,6 @@
 // utils/serviceDisplay.ts
-import { BarberOption } from "@/types/services";
+import { BarberOption } from "@/data/services";
+import { getBarberById } from "@/data/barbers";
 
 export const getRange = (
   values: (string | number)[],
@@ -33,9 +34,17 @@ export const getPriceDisplay = (
   serviceBarbers: BarberOption[],
   selectedBarber: string
 ): string => {
-  const selectedBarberInfo = serviceBarbers.find(
-    (b) => b.name.toLowerCase() === selectedBarber.toLowerCase()
-  );
+  // Handle both name-based and ID-based lookups for backward compatibility
+  const selectedBarberInfo = serviceBarbers.find((b) => {
+    const barber = getBarberById(b.barberId);
+    if (!barber) return false;
+    
+    // Check both name and ID matches
+    return (
+      barber.name.toLowerCase() === selectedBarber.toLowerCase() ||
+      barber.id.toLowerCase() === selectedBarber.toLowerCase()
+    );
+  });
 
   if (
     selectedBarber.toLowerCase() !== "any barber" &&
@@ -53,9 +62,17 @@ export const getDurationDisplay = (
   serviceBarbers: BarberOption[],
   selectedBarber: string
 ): string => {
-  const selectedBarberInfo = serviceBarbers.find(
-    (b) => b.name.toLowerCase() === selectedBarber.toLowerCase()
-  );
+  // Handle both name-based and ID-based lookups for backward compatibility
+  const selectedBarberInfo = serviceBarbers.find((b) => {
+    const barber = getBarberById(b.barberId);
+    if (!barber) return false;
+    
+    // Check both name and ID matches
+    return (
+      barber.name.toLowerCase() === selectedBarber.toLowerCase() ||
+      barber.id.toLowerCase() === selectedBarber.toLowerCase()
+    );
+  });
 
   if (
     selectedBarber.toLowerCase() !== "any barber" &&

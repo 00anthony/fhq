@@ -1,4 +1,28 @@
-import { Service } from "@/types/services"
+import { barbers, getBarberById } from './barbers';
+
+export type BarberOption = {
+  barberId: string;  // References barber.id instead of name
+  price: number | "FREE";
+  duration: number;
+};
+
+export type Media = {
+  type: "image" | "video";
+  src: string;
+  poster?: string;   // Optional
+  barber?: string;   // Optional
+  barberId?: string; // Optional - now references barber.id
+  style?: string;    // Optional
+};
+
+export type Service = {
+  id: number;
+  name: string;
+  barbers: BarberOption[];
+  category?: string[];
+  description?: string;
+  media?: Media[];
+};
 
 export const categories = ["All", "Hair", "Beard", "Style & Care", "Combo"];
 
@@ -8,8 +32,9 @@ export const servicesData: Service[] = [
     name: "Haircut", 
     category: ["Hair"], 
     barbers: [
-      { name: "Jay", price: 30, duration: 45 }, // Now in minutes (number)
-      { name: "Luis", price: 35, duration: 30 }
+      { barberId: "jj", price: 30, duration: 45 },
+      { barberId: "los", price: 35, duration: 30 },
+      { barberId: "nelson", price: 35, duration: 30 }
     ],
     description: "A clean, classic haircut tailored to your style. Includes a professional finish and styling.",
     media: [
@@ -24,10 +49,10 @@ export const servicesData: Service[] = [
     name: "Beard Trim", 
     category: ["Beard"], 
     barbers: [
-      { name: "Jay", price: 20, duration: 15 }
+      { barberId: "jj", price: 20, duration: 15 }
     ],
     description: "Detailed beard trimming and shaping for a polished look.",
-     media: [
+    media: [
       { src: '/barbers/JJ/drop-beard.mp4', type: 'video', poster: '/barbers/JJ/drop-beard-poster.webp' },
       { src: '/barbers/JJ/drop.avif', type: 'image' },
       { src: '/barbers/JJ/drop-design.avif', type: 'image' },
@@ -39,11 +64,11 @@ export const servicesData: Service[] = [
     name: "Hair + Beard",
     category: ["Combo", "Hair", "Beard"],
     barbers: [
-      { name: "Luis", price: 50, duration: 50 },
-      { name: "Jay", price: 45, duration: 45 }
+      { barberId: "los", price: 50, duration: 50 },
+      { barberId: "jj", price: 45, duration: 45 }
     ],
     description: "Haircut & beard trim combo with hot towel included.",
-     media: [
+    media: [
       { src: '/barbers/JJ/drop-beard.mp4', type: 'video', poster: '/barbers/JJ/drop-beard-poster.webp' },
       { src: '/barbers/JJ/drop.avif', type: 'image' },
       { src: '/barbers/JJ/drop-design.avif', type: 'image' },
@@ -55,11 +80,12 @@ export const servicesData: Service[] = [
     name: "Haircut & Design", 
     category: ["Hair", "Style & Care"], 
     barbers: [
-      { name: "Luis", price: 45, duration: 50 },
-      { name: "Jay", price: 50, duration: 50 }
+      { barberId: "los", price: 45, duration: 50 },
+      { barberId: "nelson", price: 40, duration: 50 },
+      { barberId: "jj", price: 50, duration: 50 }
     ], 
     description: "Our Haircut & Design Are Carefully Customized Based On Your Desired Style. Our Professional Barbers Are Carefully Crafting The Design To Your Liking After Your Desired Haircut. Hot Towels Included.",
-     media: [
+    media: [
       { src: '/barbers/JJ/drop-beard.mp4', type: 'video', poster: '/barbers/JJ/drop-beard-poster.webp' },
       { src: '/barbers/JJ/drop.avif', type: 'image' },
       { src: '/barbers/JJ/drop-design.avif', type: 'image' },
@@ -71,10 +97,10 @@ export const servicesData: Service[] = [
     name: "Deluxe Haircut", 
     category: ["Hair", "Style & Care"], 
     barbers: [
-      { name: "Luis", price: 60, duration: 50 },
+      { barberId: "los", price: 60, duration: 50 }
     ],
     description: "Each Deluxe Haircut Is Customized For You Based On Head Shape, Texture, And Desired Style. Includes A Cleanser, Exfoliator, Moisturizer, Hot Towel Included.", 
-     media: [
+    media: [
       { src: '/barbers/JJ/drop-beard.mp4', type: 'video', poster: '/barbers/JJ/drop-beard-poster.webp' },
       { src: '/barbers/JJ/drop.avif', type: 'image' },
       { src: '/barbers/JJ/drop-design.avif', type: 'image' },
@@ -86,11 +112,12 @@ export const servicesData: Service[] = [
     name: "Consultation", 
     category: ["Style & Care", "Hair", "Beard", "Combo"], 
     barbers: [
-      { name: "Luis", price: 0, duration: 30 },
-      { name: "Jay", price: 0, duration: 45 }
+      { barberId: "los", price: 0, duration: 30 },
+      { barberId: "jj", price: 0, duration: 45 },
+      {barberId: "nelson", price: 0, duration: 30}
     ], 
     description: "Book an online or in person consultation to unlock that untapped potential",
-     media: [
+    media: [
       { src: '/barbers/JJ/drop-beard.mp4', type: 'video', poster: '/barbers/JJ/drop-beard-poster.webp' },
       { src: '/barbers/JJ/drop.avif', type: 'image' },
       { src: '/barbers/JJ/drop-design.avif', type: 'image' },
@@ -99,28 +126,24 @@ export const servicesData: Service[] = [
   },
 ];
 
-// Generate barber list (no duplicates)
-export const barberNames = Array.from(
-  new Set(servicesData.flatMap((service) => service.barbers.map((b) => b.name)))
-);
+// Essential helper functions (keep minimal, let existing utils handle display logic)
+export const getServiceByName = (name: string): Service | undefined => {
+  return servicesData.find(service => service.name === name);
+};
 
-// Prepend "Any Barber"
-export const allBarbers = ['Any Barber', ...barberNames];
+// Get barber details for a service (with full barber info) - needed for availability route
+export const getServiceBarbers = (serviceName: string) => {
+  const service = getServiceByName(serviceName);
+  if (!service) return [];
+
+  return service.barbers.map(serviceBarber => {
+    const barber = getBarberById(serviceBarber.barberId);
+    return {
+      ...serviceBarber,
+      barberInfo: barber // Full barber details including availability, calendar, etc.
+    };
+  }).filter(item => item.barberInfo); // Only return barbers that exist
+};
 
 // Extract all service names
-export const allServices = servicesData.map((s) => s.name);
-
-// Helper function to get service duration for a specific barber
-export const getServiceDuration = (serviceName: string, barberName?: string): number => {
-  const service = servicesData.find(s => s.name === serviceName);
-  if (!service) return 30; // fallback
-
-  if (barberName && barberName !== 'any') {
-    const barber = service.barbers.find(b => b.name === barberName);
-    return barber?.duration || 30; // fallback
-  }
-
-  // If no specific barber, return the average duration for that service
-  const totalDuration = service.barbers.reduce((sum, barber) => sum + barber.duration, 0);
-  return Math.round(totalDuration / service.barbers.length);
-};
+export const allServices = servicesData.map(s => s.name);
