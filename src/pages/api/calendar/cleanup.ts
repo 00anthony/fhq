@@ -89,7 +89,7 @@ async function performCleanup(): Promise<CleanupResult[]> {
     if (!serviceDuration) {
       // Fallback to looking up barber-specific duration from services data
       const serviceData = servicesData.find(s => s.name === booking.service)
-      const barberData = serviceData?.barbers.find(b => b.name === booking.barber)
+      const barberData = serviceData?.barbers.find(b => b.barberId === booking.barber)
       serviceDuration = barberData?.duration || 30 // Use barber-specific duration
     }
     

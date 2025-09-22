@@ -130,7 +130,7 @@ export async function cleanupWithServiceBuffers() {
       }
 
       // Get the specific barber's duration for this service
-      const barberData = serviceData.barbers.find(b => b.name === booking.barber)
+      const barberData = serviceData.barbers.find(b => b.barberId === booking.barber)
       if (!barberData) {
         console.log(`⚠️ Barber ${booking.barber} not found for service ${booking.service}`)
         continue

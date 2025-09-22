@@ -1,14 +1,15 @@
-import { getBarberServiceMap } from "@/lib/utils/barberServiceMap";
+import { getBarberServiceMapById } from "@/lib/utils/barberServiceMap";
 
 type BarberSelectProps = {
   selected: string
   onChange: (value: string) => void
-  barbers: string[]
+  barbers: Array<{ id: string; name: string }>  // Changed to use objects
   selectedService: string
 }
 
 export function BarberSelect({ selected, onChange, barbers, selectedService }: BarberSelectProps) {
-  const barberServices = getBarberServiceMap();
+  const barberServices = getBarberServiceMapById(); // Use ID-based map
+
   return (
     <div id="barber-section" className="flex flex-col scroll-mt-20">
       <label htmlFor="barber-select" className="text-sm font-medium mb-1">Select Barber</label>
@@ -19,20 +20,20 @@ export function BarberSelect({ selected, onChange, barbers, selectedService }: B
         className="bg-neutral-800 border border-gray-300 p-2 rounded focus:outline-none transition cursor-pointer"
       >
         <option value="" disabled>Select a Barber</option>
-        {barbers.map((name) => {
-          const isAvailable = name === 'Any Barber'
+        {barbers.map((barber) => {
+          const isAvailable = barber.id === 'any'
             ? true
             : selectedService
-              ? barberServices[name]?.includes(selectedService)
+              ? barberServices[barber.id]?.includes(selectedService)
               : true
-
+          
           return (
             <option
-              key={name}
-              value={name === 'Any Barber' ? 'any' : name}
+              key={barber.id}
+              value={barber.id}  // Use ID as value
               disabled={!isAvailable}
             >
-              {name}
+              {barber.name}  {/* Display name to user */}
               {!isAvailable ? ' (Not available for this service)' : ''}
             </option>
           )

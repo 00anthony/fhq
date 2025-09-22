@@ -1,4 +1,4 @@
-import { barbers, getBarberById } from './barbers';
+import { getBarberById } from './barbers';
 
 export type BarberOption = {
   barberId: string;  // References barber.id instead of name
@@ -136,14 +136,12 @@ export const getServiceBarbers = (serviceName: string) => {
   const service = getServiceByName(serviceName);
   if (!service) return [];
 
-  return service.barbers.map(serviceBarber => {
-    const barber = getBarberById(serviceBarber.barberId);
-    return {
-      ...serviceBarber,
-      barberInfo: barber // Full barber details including availability, calendar, etc.
-    };
-  }).filter(item => item.barberInfo); // Only return barbers that exist
+  return service.barbers.map(serviceBarber => ({
+    ...serviceBarber,
+    barberInfo: getBarberById(serviceBarber.barberId)
+  }));
 };
+
 
 // Extract all service names
 export const allServices = servicesData.map(s => s.name);

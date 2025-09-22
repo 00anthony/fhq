@@ -2,6 +2,7 @@ import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import '@/styles/react-datepicker-custom.css'
 import { DateTime } from 'luxon'
+import { getBarberById } from '@/data/barbers'
 
 type DateTimePickerFieldProps = {
   selected: Date | null
@@ -24,10 +25,29 @@ export function DateTimePickerField({
 
   console.log('All availableTimes (raw):', availableTimes);
 
-  // 1. Filter availableTimes by selected barber first
-  const filteredTimesByBarber = availableTimes.filter(({ barbers }) => 
-    selectedBarber.toLowerCase() === 'any' || barbers.includes(selectedBarber)
-  )
+  // Helper function to get barber name from ID
+  const getBarberNameFromId = (barberId: string): string => {
+    if (barberId === 'any') return 'any'
+    try {
+      const barber = getBarberById(barberId)
+      return barber.name
+    } catch {
+      return barberId // fallback to ID if barber not found
+    }
+  }
+
+  // 1. Filter availableTimes by selected barber - FIXED: Convert ID to name for comparison
+  const filteredTimesByBarber = availableTimes.filter(({ barbers }) => {
+    if (selectedBarber === 'any') return true
+    
+    // Convert selectedBarber ID to name for comparison with barbers array
+    const selectedBarberName = getBarberNameFromId(selectedBarber)
+    return barbers.includes(selectedBarberName)
+  })
+
+  console.log('Selected barber ID:', selectedBarber)
+  console.log('Selected barber name:', getBarberNameFromId(selectedBarber))
+  console.log('Filtered times by barber:', filteredTimesByBarber.length)
 
   // 2. Map times to DateTime objects (local zone) and filter future times
   const availableTimesDates = filteredTimesByBarber
@@ -38,6 +58,8 @@ export function DateTimePickerField({
       return { ...t, localDT }
     })
     .filter(({ localDT }) => localDT > now)
+
+  console.log('Available times after timezone conversion:', availableTimesDates.length)
 
   // 3. Filter times by selected date (compare only the date parts, ignoring time)
   const timeSlotsForSelectedDate = selected
@@ -62,14 +84,11 @@ export function DateTimePickerField({
   const isMissingService = !selectedService
   const shouldDisableCalendar = isMissingBarber || isMissingService  
 
-  //checking if slot dates are from the same day in local time
+  // Debug logs - checking if slot dates are from the same day in local time
   console.log("Selected Date (JS):", selected);
   console.log("Selected Date (Luxon):", selected ? DateTime.fromJSDate(selected).toISO() : null);
   console.log("All available slot dates (local):", availableTimesDates.map(t => t.localDT.toISODate()));
-
-  // Debug logs (remove or comment out after testing)
-  console.log('Selected barber:', selectedBarber)
-  console.log('Available times filtered by barber and date:', timeSlotsForSelectedDate.map(t => t.localDT.toISO()))
+  console.log('Times for selected date:', timeSlotsForSelectedDate.length)
 
   return (
     <div id='date-section' className="flex flex-col space-y-3 scroll-mt-24">

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getBarberServiceMap } from "@/lib/utils/barberServiceMap";
+import { getBarberServiceMapById } from "@/lib/utils/barberServiceMap";
 import { DateTime } from 'luxon'
 
 export function useBookingForm(initialBarber = '', bookingId?: string) {
@@ -15,8 +15,8 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
   const [selectedBarberForTime, setSelectedBarberForTime] = useState<string>(initialBarber || '')
   const [isFetchingTimes, setIsFetchingTimes] = useState(false);
 
-  const isAnyBarber = (barber: string) => barber.toLowerCase().includes('any')
-  const barberServices = getBarberServiceMap();
+  const isAnyBarber = (barber: string) => barber === 'any' // Simplified check
+  const barberServices = getBarberServiceMapById(); // Use ID-based map
 
   const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
   const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif']
@@ -49,20 +49,8 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
     return true
   }
 
-  // Helper function to extract barber names from the new API format
-  const extractBarberNames = (barbers: string[] | Array<{ name: string; duration: number }>): string[] => {
-    if (!Array.isArray(barbers) || barbers.length === 0) return []
-    
-    // Handle both old format (string[]) and new format (object[])
-    if (typeof barbers[0] === 'string') {
-      return barbers as string[]
-    } else {
-      return (barbers as Array<{ name: string; duration: number }>).map(b => b.name)
-    }
-  }
-
   // Fetch availability whenever date, barber or bookingId changes
-  useEffect(() => {
+ useEffect(() => {
     console.log('🟢 selectedService changed:', selectedService);
     if (!selectedDateTime || !selectedService) {
       setAvailableTimes([])
@@ -77,13 +65,13 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
     const params = new URLSearchParams({
       start: startISO,
       end: endISO,
-      barber: isAnyBarber(selectedBarber) ? 'any' : selectedBarber,
+      barber: isAnyBarber(selectedBarber) ? 'any' : selectedBarber, // selectedBarber is now ID
       service: selectedService,
     })
 
     if (bookingId) params.append('bookingId', bookingId)
       
-    setIsFetchingTimes(true); // 🟡 Show loading
+    setIsFetchingTimes(true);
 
     console.log('📡 Fetching with service:', selectedService, 'barber:', selectedBarber);
 
@@ -91,25 +79,27 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
       .then(res => res.json())
       .then(data => {
         console.log('📬 Raw availability data:', data);
+        console.log('📬 Available slots count:', data.availableSlots?.length || 0);
+        console.log('📬 First slot example:', data.availableSlots?.[0]);
         
         if (selectedBarber && !isAnyBarber(selectedBarber)) {
-          // FIXED: Handle new API format with barber objects
+          // Filter slots for specific barber ID
           const slots = (data.availableSlots || [])
-            .filter((slot: { slot: string; barbers: string[] | Array<{ name: string; duration: number }> }) => {
-              const barberNames = extractBarberNames(slot.barbers)
-              return barberNames.includes(selectedBarber)
+            .filter((slot: { slot: string; barbers: Array<{ barberId: string; name: string; duration: number }> }) => {
+              // Check if any barber in the slot matches our selected barber ID
+              return slot.barbers.some(b => b.barberId === selectedBarber)
             })
-            .map((slot: { slot: string; barbers: string[] | Array<{ name: string; duration: number }> }) => ({
+            .map((slot: { slot: string; barbers: Array<{ barberId: string; name: string; duration: number }> }) => ({
               time: slot.slot,
-              barbers: extractBarberNames(slot.barbers),
+              barbers: slot.barbers.map(b => b.name), // Extract names for UI display
             }))
           setAvailableTimes(slots)
         } else {
-          // FIXED: Handle new API format for "any" barber selection
+          // Handle "any" barber selection
           const slots = (data.availableSlots || []).map(
-            (item: { slot: string; barbers: string[] | Array<{ name: string; duration: number }> }) => ({
+            (item: { slot: string; barbers: Array<{ barberId: string; name: string; duration: number }> }) => ({
               time: item.slot,
-              barbers: extractBarberNames(item.barbers),
+              barbers: item.barbers.map(b => b.name), // Extract names for UI display
             })
           )
           setAvailableTimes(slots)
@@ -121,8 +111,9 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
         setAvailableTimes([])
       })
       .finally(() => {
-        setIsFetchingTimes(false); // ✅ Hide loading
+        setIsFetchingTimes(false);
       });
+      console.log('Selected barber:', selectedBarber)
   }, [selectedDateTime, selectedBarber, selectedService, bookingId])
 
   // Update available barbers for selected time whenever availableTimes or selectedDateTime changes
@@ -161,19 +152,14 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
   }, [availableTimes])
 
   useEffect(() => {
-    if (
-      selectedBarber &&
-      !isAnyBarber(selectedBarber)
-    ) {
-      const servicesOffered = barberServices[selectedBarber] || []
+    if (selectedBarber && !isAnyBarber(selectedBarber)) {
+      const servicesOffered = barberServices[selectedBarber] || [] // Now using ID
 
-      // Case 1: Service is selected but not valid for the selected barber
       if (!servicesOffered.includes(selectedService)) {
         setSelectedService('')
         setSelectedDateTime(null)
       }
 
-      // Case 2: Barber has no services at all
       if (servicesOffered.length === 0) {
         setSelectedService('')
         setSelectedDateTime(null)

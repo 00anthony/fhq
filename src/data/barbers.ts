@@ -313,8 +313,12 @@ export const barbers: Barber[] = [
 ];
 
 // Helper functions for easy access
-export const getBarberById = (id: string): Barber | undefined => {
-  return barbers.find(barber => barber.id === id);
+export const getBarberById = (id: string): Barber => {
+  const barber = barbers.find(b => b.id === id);
+  if (!barber) {
+    throw new Error(`Barber with id "${id}" not found in barbers.ts`);
+  }
+  return barber;
 };
 
 export const getBarberBySlug = (slug: string): Barber | undefined => {
@@ -335,4 +339,7 @@ export const getBarberCalendarMap = (): Record<string, string> => {
 };
 
 //required for barber selection in booking form
-export const allBarbers = ['Any Barber', ...getActiveBarbers().map(b => b.name)];
+export const allBarbers = [
+  { id: 'any', name: 'Any Barber' },
+  ...getActiveBarbers().map(b => ({ id: b.id, name: b.name }))
+];

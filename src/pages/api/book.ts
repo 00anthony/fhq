@@ -62,7 +62,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
   
   // Get the specific barber's duration for this service
-  const barberData = serviceData.barbers.find(b => b.name === barber);
+  const barberData = serviceData.barbers.find(b => b.barberId === barber);
   if (!barberData) {
     return res.status(400).json({ error: 'Invalid barber selected for this service' });
   }
