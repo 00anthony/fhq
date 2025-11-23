@@ -192,11 +192,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let barberInfo;
     try {
       barberInfo = getBarberById(barber);
-    } catch (error) {
+    } catch {
       return res.status(400).json({ error: 'Invalid barber ID' });
     }
 
-    const barberName = barberInfo.name;
+    //const barberName = barberInfo.name;
     const calendarId = barberInfo.calendarId || 'primary';
 
     const event = await calendar.events.insert({

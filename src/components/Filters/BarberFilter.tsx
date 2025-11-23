@@ -1,7 +1,5 @@
 "use client";
 
-import { Barber } from "@/data/barbers";
-
 type BarberFilterProps = {
   barbers: { id: string; name: string }[];
   selectedBarberId: string;

@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { categories } from "@/data/services";
-import { allBarbers, barbers } from "@/data/barbers";
+import { allBarbers } from "@/data/barbers";
 import ServicesFilters from "@/components/Services/ServiceFilters";
 import ServicesGrid from "@/components/Services/ServicesGrid"; 
 

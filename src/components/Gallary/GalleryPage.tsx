@@ -7,7 +7,7 @@ import BarberFilter from '../Filters/BarberFilter';
 import MultiSelectDropdown from '../Filters/MultiSelectDropdown';
 import { allBarbers } from '@/data/barbers';
 
-export default function GalleryGrid({ items, barbers }: GalleryGridProps) {
+export default function GalleryGrid({ items }: GalleryGridProps) {
   const [selectedBarberId, setSelectedBarberId] = useState('any');
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
 
