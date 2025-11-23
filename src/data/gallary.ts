@@ -4,8 +4,8 @@ import { GalleryItem } from '@/types/gallery'
 export const galleryData: GalleryItem[] = [
   {
     id: 1,
-    barber: 'Jay',
-    barberId: 'jay',
+    barber: 'JJ',
+    barberId: 'jj',
     style: 'Fade & Line-Up',
     src: '/barbers/los/profile.avif',
     type: 'image',
@@ -15,8 +15,8 @@ export const galleryData: GalleryItem[] = [
   },
   {
     id: 2,
-    barber: 'Luis',
-    barberId: 'luis',
+    barber: 'Los',
+    barberId: 'los',
     style: 'Pompadour Video Demo',
     src: '/barbers/JJ/drop-beard.mp4',
     type: 'video',
@@ -27,8 +27,8 @@ export const galleryData: GalleryItem[] = [
   },
   {
     id: 3,
-    barber: 'Luis',
-    barberId: 'luis',
+    barber: 'Los',
+    barberId: 'los',
     style: 'Taper + Design',
     src: '/barbers/JJ/taper-design.avif',
     type: 'image',
@@ -38,8 +38,8 @@ export const galleryData: GalleryItem[] = [
   },
   {
     id: 4,
-    barber: 'Jay',
-    barberId: 'jay',
+    barber: 'JJ',
+    barberId: 'jj',
     style: 'Drop Fade',
     src: '/barbers/JJ/drop.avif',
     type: 'image',
@@ -49,8 +49,8 @@ export const galleryData: GalleryItem[] = [
   },
   {
     id: 5,
-    barber: 'Jay',
-    barberId: 'jay',
+    barber: 'JJ',
+    barberId: 'jj',
     style: 'Drop + Design',
     src: '/barbers/JJ/drop-design.avif',
     type: 'image',
@@ -60,8 +60,8 @@ export const galleryData: GalleryItem[] = [
   },
   {
     id: 6,
-    barber: 'Luis',
-    barberId: 'luis',
+    barber: 'Los',
+    barberId: 'los',
     style: 'Taper',
     src: '/barbers/JJ/profile.avif',
     type: 'image',

@@ -9,12 +9,12 @@ const ModalGallery = dynamic(() => import("@/components/Gallary/ModalGallery"), 
 });
 
 type ServicesGridProps = {
-  selectedBarber: string;
+  selectedBarberId: string;
   selectedCategory: string;
 };
 
 export default function ServicesGrid({
-  selectedBarber,
+  selectedBarberId,
   selectedCategory,
 }: ServicesGridProps) {
   const [expandedServiceId, setExpandedServiceId] = useState<number | null>(
@@ -28,8 +28,8 @@ export default function ServicesGrid({
   // Filtered services
   const filteredServices = servicesData.filter((service) => {
     const barberMatch =
-      selectedBarber === "Any Barber" ||
-      service.barbers.some((barber) => barber.barberId === selectedBarber);
+      selectedBarberId === "any" ||
+      service.barbers.some((barber) => barber.barberId === selectedBarberId);
 
     const categoryMatch =
       selectedCategory === "All" ||
@@ -69,7 +69,7 @@ export default function ServicesGrid({
             <ServiceCard
               key={service.id}
               service={service}
-              selectedBarber={selectedBarber}
+              selectedBarber={selectedBarberId}
               expanded={expandedServiceId === service.id}
               onToggle={() =>
                 setExpandedServiceId(

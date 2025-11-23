@@ -4,16 +4,16 @@ import BarberFilter from "../Filters/BarberFilter";
 import AnimatedDropdown from "../Filters/AnimatedDropdown";
 
 type ServicesFiltersProps = {
-  selectedBarber: string;
+  selectedBarberId: string;
   selectedCategory: string;
-  onSelectBarber: (barber: string) => void;
+  onSelectBarber: (barberId: string) => void;
   onSelectCategory: (category: string) => void;
-  barbers: string[];
+  barbers: { id: string; name: string }[];
   categories: string[];
 };
 
 export default function ServicesFilters({
-  selectedBarber,
+  selectedBarberId,
   selectedCategory,
   onSelectBarber,
   onSelectCategory,
@@ -25,7 +25,7 @@ export default function ServicesFilters({
       {/* Barber Filter - Left */}
       <BarberFilter
         barbers={barbers}
-        selectedBarber={selectedBarber}
+        selectedBarberId={selectedBarberId}
         onSelect={onSelectBarber}
       />
 

@@ -5,9 +5,10 @@ import { GalleryGridProps } from '@/types/gallery';
 import GallaryGrid from './GallaryGrid';
 import BarberFilter from '../Filters/BarberFilter';
 import MultiSelectDropdown from '../Filters/MultiSelectDropdown';
+import { allBarbers } from '@/data/barbers';
 
 export default function GalleryGrid({ items, barbers }: GalleryGridProps) {
-  const [barberFilter, setBarberFilter] = useState('All');
+  const [selectedBarberId, setSelectedBarberId] = useState('any');
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
 
   const groupedOptions = [
@@ -16,9 +17,10 @@ export default function GalleryGrid({ items, barbers }: GalleryGridProps) {
     { label: 'Equipment', options: ['Razor', 'Scissors', 'Clippers'] },
   ];
 
-  // Filtering items by barber AND selectedFilters
+  // Filtering items by barber ID AND selectedFilters
   const filteredItems = items.filter(item => {
-    if (barberFilter !== 'All' && item.barber !== barberFilter) return false;
+    // Check barber match using ID
+    if (selectedBarberId !== 'any' && item.barberId !== selectedBarberId) return false;
 
     if (selectedFilters.length === 0) return true;
 
@@ -39,9 +41,9 @@ export default function GalleryGrid({ items, barbers }: GalleryGridProps) {
         <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-10">
           {/* Barber Filter - Left */}
           <BarberFilter
-            barbers={['All', ...barbers]}
-            selectedBarber={barberFilter}
-            onSelect={setBarberFilter}
+            barbers={allBarbers}
+            selectedBarberId={selectedBarberId}
+            onSelect={setSelectedBarberId}
           />
 
           {/* Dropdown Filters - Right */}
