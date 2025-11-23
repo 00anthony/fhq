@@ -76,9 +76,8 @@ export function BookingForm({ barberName = '', bookingId }: BookingFormProps) {
   const selectedServiceObject = servicesData.find(s => s.name === selectedService);
 
   // Convert barber names to barber objects with IDs and durations
-  const availableBarbersWithInfo = availableBarbersForSelectedTime.map(barberName => {
-    // Find the barber by name to get their ID
-    const barber = allBarbers.find(b => b.name === barberName);
+  const availableBarbersWithInfo = availableBarbersForSelectedTime.map(barberId => {
+    const barber = allBarbers.find(b => b.id === barberId);
     
     if (!barber) {
       console.warn(`Could not find barber with name: ${barberName}`);
@@ -135,9 +134,9 @@ export function BookingForm({ barberName = '', bookingId }: BookingFormProps) {
             isLoading={isFetchingTimes}
           />
 
-          {availableBarbersWithInfo.length > 0 && (
+          {selectedBarber === 'any' && availableBarbersWithInfo.length > 0 && (
             <BarberTimeSelect
-              availableBarbers={availableBarbersWithInfo} // Use converted array
+              availableBarbers={availableBarbersWithInfo}
               selectedBarber={selectedBarberForTime}
               onChange={setSelectedBarberForTime}
               serviceBarbers={selectedServiceObject?.barbers ?? []}

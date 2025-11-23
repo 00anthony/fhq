@@ -7,7 +7,8 @@ import { PrismaClient } from '@prisma/client'
 import auth from '@/lib/google-auth'
 import resend from '@/lib/resend'
 import { DateTime } from 'luxon';
-import { servicesData } from '@/data/services' // Import services data
+import { servicesData } from '@/data/services' 
+import { getBarberById } from '@/data/barbers'
 
 // Disable Next.js default body parser to handle FormData
 export const config = {
@@ -145,22 +146,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
 
       const isAvailable = availableSlots.some((slotObj) => {
-        console.log('🔍 Checking against slots:', availableSlots.length)
-        console.log('⏰ Selected:', userDateTime.toISO(), userDateTime.toMillis())
+        console.log('🔍 Checking slot:', slotObj.slot)
+        console.log('🔍 Slot barbers:', slotObj.barbers)
+        console.log('🔍 Looking for barber ID:', barber)
 
         if (!slotObj?.slot || !Array.isArray(slotObj.barbers)) return false
         
-        // Handle both old format (string[]) and new format (object[])
-        const barberNames = slotObj.barbers.length > 0
-          ? typeof slotObj.barbers[0] === 'string' 
-            ? slotObj.barbers as string[]
-            : (slotObj.barbers as Array<{ name: string; duration: number }>).map(b => b.name)
-          : [];
+        // Check if barbers array contains objects with barberId
+        const barberIds = slotObj.barbers.length > 0 && typeof slotObj.barbers[0] === 'object'
+          ? (slotObj.barbers as Array<{ barberId: string; name: string; duration: number }>).map(b => b.barberId)
+          : slotObj.barbers as string[]; // Fallback for string array
         
-        return (
-          barberNames.includes(barber) &&
-          DateTime.fromISO(slotObj.slot).toMillis() === userDateTime.toMillis()
-        )
+        const timeMatches = DateTime.fromISO(slotObj.slot).toMillis() === userDateTime.toMillis()
+        const barberMatches = barberIds.includes(barber)
+        
+        console.log('⏰ Time matches:', timeMatches)
+        console.log('👨‍💼 Barber matches:', barberMatches, `(looking for ${barber} in ${barberIds})`)
+        
+        return timeMatches && barberMatches
       })
 
       console.log('🔍 Available slots:', availableSlots)
@@ -185,13 +188,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // ✅ Setup Google Calendar
     const calendar = google.calendar({ version: 'v3', auth });
 
-    const barberCalendars: Record<string, string> = {
-      Jay: 'anthonytij3@gmail.com',
-      Luis: 'luisbarber@gmail.com',
-      //Los: 'losbarber@gmail.com',
-    };
+    // Get barber info from ID in barbers.ts
+    let barberInfo;
+    try {
+      barberInfo = getBarberById(barber);
+    } catch (error) {
+      return res.status(400).json({ error: 'Invalid barber ID' });
+    }
 
-    const calendarId = barberCalendars[barber] || 'primary'
+    const barberName = barberInfo.name;
+    const calendarId = barberInfo.calendarId || 'primary';
 
     const event = await calendar.events.insert({
       calendarId,
@@ -209,11 +215,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const formattedTime = userDateTime.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY);
     const formattedEndTime = userDateTime.plus({ minutes: serviceDurationMinutes }).toLocaleString(DateTime.TIME_SIMPLE);
 
-    // ✅ Barber email map
+    // For email, you'll need to add an email field to your barber data, or use a mapping with IDs:
     const barberEmails: Record<string, string> = {
-      Jay: 'anthonytij3@gmail.com',
-      Luis: 'luis@barbershop.com',
-      //Los: 'los@barbershop.com',
+      'jj': 'anthonytij3@gmail.com',
+      'los': 'luis@barbershop.com',
+      'nelson': 'nelson@barbershop.com',
     }
 
     const barberEmail = barberEmails[barber] || 'fallback@barbershop.com'

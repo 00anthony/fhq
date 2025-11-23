@@ -18,8 +18,11 @@ export function BarberTimeSelect({
   if (availableBarbers.length === 0) return null
 
   // Find the selected barber's name for display
-  const selectedBarberInfo = availableBarbers.find(b => b.barberId === selectedBarber)
-  const selectedBarberName = selectedBarberInfo?.name || selectedBarber
+  const selectedBarberInfo =
+    availableBarbers.find(b => b.barberId === selectedBarber) || availableBarbers[0];
+
+  const selectedBarberName = selectedBarberInfo?.name || "Unassigned";
+
 
   const priceDisplay = getPriceDisplay(serviceBarbers, selectedBarber) // Pass barber ID to price function
 

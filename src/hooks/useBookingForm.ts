@@ -91,17 +91,19 @@ export function useBookingForm(initialBarber = '', bookingId?: string) {
             })
             .map((slot: { slot: string; barbers: Array<{ barberId: string; name: string; duration: number }> }) => ({
               time: slot.slot,
-              barbers: slot.barbers.map(b => b.name), // Extract names for UI display
+              barbers: slot.barbers.map(b => b.barberId), // Keep IDs
             }))
           setAvailableTimes(slots)
         } else {
-          // Handle "any" barber selection
-          const slots = (data.availableSlots || []).map(
-            (item: { slot: string; barbers: Array<{ barberId: string; name: string; duration: number }> }) => ({
-              time: item.slot,
-              barbers: item.barbers.map(b => b.name), // Extract names for UI display
-            })
-          )
+          // Define the expected data shape for clarity
+          type BarberData = { barberId: string; name: string; duration: number };
+          type AvailabilitySlot = { slot: string; barbers: BarberData[] };
+
+          // Handle "any" barber selection safely
+          const slots = ((data.availableSlots as AvailabilitySlot[]) || []).map((item) => ({
+            time: item.slot,
+            barbers: item.barbers.map((b: BarberData) => b.barberId),
+          }));
           setAvailableTimes(slots)
           console.log('✅ Slots set for UI:', slots)
         }

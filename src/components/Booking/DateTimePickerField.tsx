@@ -24,6 +24,8 @@ export function DateTimePickerField({
   const now = DateTime.now()
 
   console.log('All availableTimes (raw):', availableTimes);
+  console.log('Sample available time:', availableTimes[0]);
+  console.log('Sample barbers array:', availableTimes[0]?.barbers);
 
   // Helper function to get barber name from ID
   const getBarberNameFromId = (barberId: string): string => {
@@ -36,17 +38,26 @@ export function DateTimePickerField({
     }
   }
 
-  // 1. Filter availableTimes by selected barber - FIXED: Convert ID to name for comparison
-  const filteredTimesByBarber = availableTimes.filter(({ barbers }) => {
-    if (selectedBarber === 'any') return true
-    
-    // Convert selectedBarber ID to name for comparison with barbers array
-    const selectedBarberName = getBarberNameFromId(selectedBarber)
-    return barbers.includes(selectedBarberName)
-  })
-
   console.log('Selected barber ID:', selectedBarber)
-  console.log('Selected barber name:', getBarberNameFromId(selectedBarber))
+
+  // 1. Filter availableTimes by selected barber - use ID for comparison
+  const filteredTimesByBarber = availableTimes.filter(({ barbers }) => {
+    console.log('Checking slot barbers:', barbers, 'against:', selectedBarber);
+    
+    if (selectedBarber === 'any') return true;
+    
+    // Handle if barbers is undefined or empty
+    if (!barbers || !Array.isArray(barbers)) {
+      console.log('⚠️ Barbers is not an array or is empty');
+      return false;
+    }
+    
+    // Compare barber IDs directly (barbers array contains IDs like ['jj'])
+    const matches = barbers.includes(selectedBarber);
+    console.log('Match result:', matches);
+    return matches;
+  });
+
   console.log('Filtered times by barber:', filteredTimesByBarber.length)
 
   // 2. Map times to DateTime objects (local zone) and filter future times
@@ -138,7 +149,10 @@ export function DateTimePickerField({
             >
               {localDT.toFormat('hh:mm a')}
               <span className="block text-xs text-gray-400">
-                {barbers.length === 1 ? barbers[0] : `${barbers.length} barbers`}
+                {barbers.length === 1 
+                  ? getBarberNameFromId(barbers[0])  // Convert ID to name for display
+                  : `${barbers.length} barbers`
+                }
               </span>
             </button>
           ))}
