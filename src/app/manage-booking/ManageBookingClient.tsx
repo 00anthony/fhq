@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { DateTimePickerField } from '@/components/Booking/DateTimePickerField'
 import ConfirmModal from '@/components/Modals/ConfirmModal'
 import SuccessModal from '@/components/Modals/SuccessModal'
+import { getBarberById } from '@/data/barbers'
 
 type Booking = {
   id: string
@@ -27,7 +28,7 @@ export default function ManageBookingClient() {
   const [error, setError] = useState('')
   const [selectedDateTime, setSelectedDateTime] = useState<Date | null>(null)
   const [availableTimes, setAvailableTimes] = useState<{ time: string; barbers: string[] }[]>([])
-  const selectedBarber = booking?.barber || ''
+  const selectedBarber = booking?.barber || '' // This is now a barber ID
   const selectedService = booking?.service || ''
   const [isFetchingTimes, setIsFetchingTimes] = useState(false)
   const [isRescheduling, setIsRescheduling] = useState(false)
@@ -37,15 +38,13 @@ export default function ManageBookingClient() {
   const [successMessage, setSuccessMessage] = useState('')
   const [successType, setSuccessType] = useState<'reschedule' | 'cancel' | 'booking' | null>(null)  
 
-  // Helper function to extract barber names from the new API format
-  const extractBarberNames = (barbers: string[] | Array<{ name: string; duration: number }>): string[] => {
-    if (!Array.isArray(barbers) || barbers.length === 0) return []
-    
-    // Handle both old format (string[]) and new format (object[])
-    if (typeof barbers[0] === 'string') {
-      return barbers as string[]
-    } else {
-      return (barbers as Array<{ name: string; duration: number }>).map(b => b.name)
+  // Get barber name from ID for display
+  const getBarberName = (barberId: string): string => {
+    try {
+      const barber = getBarberById(barberId)
+      return barber.name
+    } catch {
+      return barberId // fallback to ID if not found
     }
   }
 
@@ -83,7 +82,7 @@ export default function ManageBookingClient() {
       const query = new URLSearchParams({
         start: start.toISOString(),
         end: end.toISOString(),
-        barber: booking.barber,
+        barber: booking.barber, // This is now a barber ID
         service: booking.service || '',
       })
 
@@ -94,11 +93,14 @@ export default function ManageBookingClient() {
         
         console.log('📬 Raw availability data for rescheduling:', data);
         
-        // FIXED: Handle new API format with barber objects
+        // FIXED: Handle new API format with barberId, name, duration objects
         const slots = (data.availableSlots || []).map(
-          (item: { slot: string; barbers: string[] | Array<{ name: string; duration: number }> }) => ({
+          (item: { 
+            slot: string; 
+            barbers: Array<{ barberId: string; name: string; duration: number }> 
+          }) => ({
             time: item.slot,
-            barbers: extractBarberNames(item.barbers),
+            barbers: item.barbers.map(b => b.barberId), // Store barber IDs, not names
           })
         )
         
@@ -195,8 +197,6 @@ export default function ManageBookingClient() {
       <p className="text-sm text-gray-300 text-center ">Review, reschedule, or cancel below</p>
       <div className="col-span-full mb-8 mx-auto w-24 border-b-4 border-red-900"></div>
 
-      
-
       {/* Booking Details */}
       <div className="space-y-1 text-sm">
         <p><strong>Name:</strong> {booking.name}</p>
@@ -210,7 +210,7 @@ export default function ManageBookingClient() {
           })}
           ({booking.timeZone || 'local time'})
         </p>
-        <p><strong>Barber:</strong> {booking.barber}</p>
+        <p><strong>Barber:</strong> {getBarberName(booking.barber)}</p>
         {booking.comments && <p><strong>Comments:</strong> {booking.comments}</p>}
       </div>
 
@@ -221,7 +221,7 @@ export default function ManageBookingClient() {
           selected={selectedDateTime}
           onChange={setSelectedDateTime}
           availableTimes={availableTimes}
-          selectedBarber={selectedBarber}
+          selectedBarber={selectedBarber} // Pass barber ID
           selectedService={selectedService}
           isLoading={isFetchingTimes}
         />   

@@ -54,35 +54,42 @@ export async function POST(req: Request) {
     const formattedTime = dt.setZone(timeZone).toLocaleString(DateTime.DATETIME_MED)
     const formattedEndTime = dt.setZone(timeZone).plus({ minutes: serviceDurationMinutes }).toLocaleString(DateTime.TIME_SIMPLE)
 
-    // Overlap check before calendar update - ENHANCED to check for duration conflicts
+    // Get all active bookings for this barber on the same day
     const appointmentEnd = dt.plus({ minutes: serviceDurationMinutes })
-    
-    const overlapping = await prisma.booking.findFirst({
+
+    const existingBookings = await prisma.booking.findMany({
       where: {
         barber: booking.barber,
-        id: { not: bookingId }, // don't check against the current booking
-        eventDeleted: { not: true }, // only check active bookings
-        OR: [
-          // New appointment starts during existing appointment
-          {
-            datetime: {
-              lte: dt.toJSDate()
-            },
-            // We need to calculate when existing appointment ends
-            // For now, we'll do a simpler check and let the calendar API handle conflicts
-          },
-          // Existing appointment starts during new appointment
-          {
-            datetime: {
-              gte: dt.toJSDate(),
-              lt: appointmentEnd.toJSDate()
-            }
-          }
-        ]
-      },
+        id: { not: bookingId },
+        eventDeleted: { not: true },
+        datetime: {
+          gte: dt.startOf('day').toJSDate(), // Same day
+          lt: dt.endOf('day').toJSDate()
+        }
+      }
     })
 
-    if (overlapping) {
+    // Check each booking for overlap
+    const hasConflict = existingBookings.some(existingBooking => {
+      const existingStart = DateTime.fromJSDate(existingBooking.datetime, { zone: 'utc' })
+      const existingDuration = existingBooking.serviceDuration || 30 // Fallback to 30 min
+      const existingEnd = existingStart.plus({ minutes: existingDuration })
+      
+      // Check if appointments overlap
+      // New starts before existing ends AND new ends after existing starts
+      const overlaps = dt < existingEnd && appointmentEnd > existingStart
+      
+      if (overlaps) {
+        console.log('Conflict found:', {
+          existing: `${existingStart.toISO()} - ${existingEnd.toISO()}`,
+          new: `${dt.toISO()} - ${appointmentEnd.toISO()}`
+        })
+      }
+      
+      return overlaps
+    })
+
+    if (hasConflict) {
       return NextResponse.json({ error: 'That time slot conflicts with an existing appointment' }, { status: 409 })
     }
 
