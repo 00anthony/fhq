@@ -1,8 +1,9 @@
 import { DateTime } from 'luxon'
 import { siteConfig } from '@/config/siteConfig'
+import { getBarberById } from '@/data/barbers'
 
 type BookingSummaryProps = {
-  barber: string
+  barber: string  // This is now a barber ID
   service: { name: string; 
     price: number | 'FREE'; 
     duration: number 
@@ -19,8 +20,19 @@ export function BookingSummary({
 }: BookingSummaryProps) {
   if (!barber || !service || !date || !time) return null
 
+  // Convert barber ID to name for display
+  const getBarberName = (barberId: string): string => {
+    try {
+      const barberInfo = getBarberById(barberId)
+      return barberInfo.name
+    } catch {
+      return barberId // fallback to ID if not found
+    }
+  }
+
+  const barberName = getBarberName(barber)
   const formattedDate = date ? DateTime.fromJSDate(date).toFormat('DDD') : ''
-const formattedTime = time ? DateTime.fromJSDate(time).toFormat('t') : ''
+  const formattedTime = time ? DateTime.fromJSDate(time).toFormat('t') : ''
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id)
@@ -32,7 +44,7 @@ const formattedTime = time ? DateTime.fromJSDate(time).toFormat('t') : ''
       <h2 className="text-lg  mb-4">Booking Summary</h2>
       <ul className="space-y-3 text-sm text-gray-400">
         <li className="flex justify-between items-center">
-          <span><span className="font-medium">Barber:</span> {barber}</span>
+          <span><span className="font-medium">Barber:</span> {barberName}</span>
           <button type='button' onClick={() => scrollToSection('barber-section')} aria-label="Edit Barber">
             <svg
               xmlns="http://www.w3.org/2000/svg"
