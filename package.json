@@ -20,7 +20,7 @@
     "googleapis": "^152.0.0",
     "lottie-react": "^2.4.1",
     "luxon": "^3.7.1",
-    "next": "15.3.4",
+    "next": "15.3.8",
     "next-auth": "^4.24.11",
     "notiflix": "^3.2.8",
     "react": "^19.0.0",
