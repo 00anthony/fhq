@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import auth from '@/lib/google-auth'
 import resend from '@/lib/resend'
+import { DateTime } from 'luxon'
 
 const prisma = new PrismaClient()
 
@@ -21,6 +22,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
     }
 
+    const bookingTime = DateTime.fromJSDate(booking.datetime, { zone: 'utc' })
+    const now = DateTime.utc()
+
+    if (bookingTime < now) {
+      return NextResponse.json({ 
+        error: 'Cannot cancel a past appointment' 
+      }, { status: 400 })
+    }
+
     const calendar = google.calendar({ version: 'v3', auth })
 
     await calendar.events.delete({
@@ -35,12 +45,12 @@ export async function POST(req: Request) {
       timeStyle: 'short',
     })
 
+    // Barber email map - use IDs instead of names
     const barberEmails: Record<string, string> = {
-      Jay: 'anthonytij3@gmail.com',
-      Luis: 'luis@barbershop.com',
-      //Los: 'los@barbershop.com',
+      'jj': 'anthonytij3@gmail.com',
+      'los': 'luis@barbershop.com',
+      'nelson': 'nelson@barbershop.com',
     }
-
     const barberEmail = barberEmails[booking.barber] || 'fallback@barbershop.com'
 
     // Client email

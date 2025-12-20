@@ -39,6 +39,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
     }
 
+    const bookingTime = DateTime.fromJSDate(booking.datetime, { zone: 'utc' })
+    if (bookingTime < now) {
+      return NextResponse.json({ 
+        error: 'Cannot reschedule a past appointment' 
+      }, { status: 400 })
+    }
+
     // FIXED: Get barber-specific service duration
     let serviceDurationMinutes = booking.serviceDuration // Use stored duration first
     if (!serviceDurationMinutes) {
@@ -118,13 +125,13 @@ export async function POST(req: Request) {
       },
     })
 
-    // Barber email map
+    // Barber email map - use IDs instead of names
     const barberEmails: Record<string, string> = {
-      Jay: 'anthonytij3@gmail.com',
-      Luis: 'luis@barbershop.com',
-      //Los: 'los@barbershop.com',
+      'jj': 'anthonytij3@gmail.com',
+      'los': 'luis@barbershop.com',
+      'nelson': 'nelson@barbershop.com',
     }
-    const barberEmail = barberEmails[booking.barber] || 'fallback@barbershop.com'
+    const barberEmail = barberEmails[booking.barber] || 'fallback@barbershop.com' //should be main business or boss's email
 
     // Get barber's price for this service
     const serviceData = servicesData.find(s => s.name === booking.service)
@@ -134,7 +141,7 @@ export async function POST(req: Request) {
     // Client email
     try {
       await resend.emails.send({
-        from: 'Barbershop <onboarding@resend.dev>',
+        from: 'Faded Headquarters <onboarding@resend.dev>',
         to: booking.email,
         subject: 'Your Appointment Has Been Rescheduled',
         html: `
@@ -153,7 +160,7 @@ export async function POST(req: Request) {
     // Barber email
     try {
       await resend.emails.send({
-        from: 'Barbershop <onboarding@resend.dev>',
+        from: 'Faded Headquarters <onboarding@resend.dev>',
         to: barberEmail,
         subject: 'Appointment Rescheduled',
         html: `

@@ -36,7 +36,10 @@ export default function ManageBookingClient() {
   const [modalType, setModalType] = useState<'reschedule' | 'cancel' | null>(null)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
-  const [successType, setSuccessType] = useState<'reschedule' | 'cancel' | 'booking' | null>(null)  
+  const [successType, setSuccessType] = useState<'reschedule' | 'cancel' | 'booking' | null>(null)
+  
+  // Check if appointment is in the past
+  const isPastAppointment = booking && new Date(booking.datetime) < new Date()
 
   // Get barber name from ID for display
   const getBarberName = (barberId: string): string => {
@@ -70,9 +73,9 @@ export default function ManageBookingClient() {
     fetchBooking()
   }, [bookingId])
 
-  // 📅 Fetch available time slots
+  // 📅 Fetch available time slots - only if not a past appointment
   useEffect(() => {
-    if (!selectedDateTime || !booking?.barber) return
+    if (!selectedDateTime || !booking?.barber || isPastAppointment) return
     const fetchAvailability = async () => {
       const start = new Date(selectedDateTime)
       start.setHours(0, 0, 0, 0)
@@ -114,7 +117,7 @@ export default function ManageBookingClient() {
       }
     }
     fetchAvailability()
-  }, [selectedDateTime, booking?.barber, booking?.service])
+  }, [selectedDateTime, booking?.barber, booking?.service, isPastAppointment])
 
   useEffect(() => {
     if (booking?.datetime) {
@@ -193,9 +196,22 @@ export default function ManageBookingClient() {
 
   return (
     <div className="p-4 max-w-xl mx-auto space-y-6 mt-20">
-      <h1 id="booking-form-title" className="text-4xl uppercase text-center text-neutral-100 mb-2">Manage Your Appointment</h1>
-      <p className="text-sm text-gray-300 text-center ">Review, reschedule, or cancel below</p>
+      <h1 id="booking-form-title" className="text-4xl uppercase text-center text-neutral-100 mb-2">
+        {isPastAppointment ? 'Past Appointment' : 'Manage Your Appointment'}
+      </h1>
+      <p className="text-sm text-gray-300 text-center">
+        {isPastAppointment ? 'View your past appointment details' : 'Review, reschedule, or cancel below'}
+      </p>
       <div className="col-span-full mb-8 mx-auto w-24 border-b-4 border-red-900"></div>
+
+      {/* Past Appointment Warning */}
+      {isPastAppointment && (
+        <div className="bg-yellow-900/20 border border-yellow-900 rounded-lg p-4 mb-4">
+          <p className="text-yellow-200 text-sm">
+            ⚠️ This appointment has already passed. You can no longer reschedule or cancel it.
+          </p>
+        </div>
+      )}
 
       {/* Booking Details */}
       <div className="space-y-1 text-sm">
@@ -214,41 +230,44 @@ export default function ManageBookingClient() {
         {booking.comments && <p><strong>Comments:</strong> {booking.comments}</p>}
       </div>
 
-      {/* Reschedule Section */}
-      <div className="space-y-2">
-        <h2 className="text-lg font-medium">Reschedule</h2>
-        <DateTimePickerField
-          selected={selectedDateTime}
-          onChange={setSelectedDateTime}
-          availableTimes={availableTimes}
-          selectedBarber={selectedBarber} // Pass barber ID
-          selectedService={selectedService}
-          isLoading={isFetchingTimes}
-        />   
-      </div>
+      {/* Reschedule Section - Only show for future appointments */}
+      {!isPastAppointment && (
+        <>
+          <div className="space-y-2">
+            <h2 className="text-lg font-medium">Reschedule</h2>
+            <DateTimePickerField
+              selected={selectedDateTime}
+              onChange={setSelectedDateTime}
+              availableTimes={availableTimes}
+              selectedBarber={selectedBarber} // Pass barber ID
+              selectedService={selectedService}
+              isLoading={isFetchingTimes}
+            />   
+          </div>
 
-      {/*  Buttons */}
-      <div className='flex space-8 justify-evenly'>
-        
-        {/* Cancel Button */}
-        <button
-          onClick={() => setModalType('cancel')}
-          disabled={isCancelling}
-          className="bg-red-900 text-white px-4 py-2 rounded-lg hover:bg-red-800 cursor-pointer"
-        >
-          {isCancelling ? 'Cancelling...' : 'Cancel Booking'}
-        </button>
+          {/* Buttons - Only show for future appointments */}
+          <div className='flex space-8 justify-evenly'>
+            
+            {/* Cancel Button */}
+            <button
+              onClick={() => setModalType('cancel')}
+              disabled={isCancelling}
+              className="bg-red-900 text-white px-4 py-2 rounded-lg hover:bg-red-800 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isCancelling ? 'Cancelling...' : 'Cancel Booking'}
+            </button>
 
-        {/* Reschedule Button */}
-        <button
-          onClick={() => setModalType('reschedule')}
-          disabled={isRescheduling}
-          className="bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-600 cursor-pointer"
-        >
-          {isRescheduling ? 'Rescheduling...' : 'Confirm Reschedule'}
-        </button>
-      </div>
-      
+            {/* Reschedule Button */}
+            <button
+              onClick={() => setModalType('reschedule')}
+              disabled={isRescheduling}
+              className="bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isRescheduling ? 'Rescheduling...' : 'Confirm Reschedule'}
+            </button>
+          </div>
+        </>
+      )}
 
       <ConfirmModal
         isOpen={modalType === 'reschedule'}

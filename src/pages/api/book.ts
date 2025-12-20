@@ -229,7 +229,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Send client confirmation email with duration info
     await resend.emails.send({
-      from: 'Barbershop <onboarding@resend.dev>',
+      from: 'Faded Headquarters <onboarding@resend.dev>',
       to: email,
       subject: 'Your Appointment is Confirmed',
       html: `
@@ -245,7 +245,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Send barber notification email (with optional attachment and duration info)
     await resend.emails.send({
-      from: 'Barbershop <onboarding@resend.dev>',
+      from: 'Faded Headquarters <onboarding@resend.dev>',
       to: barberEmail,
       subject: `New Booking for ${barber}`,
       html: `
